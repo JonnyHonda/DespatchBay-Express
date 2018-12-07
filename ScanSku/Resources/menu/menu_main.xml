@@ -2,8 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
   <!--///showAsAction="always" ///-->
   <item android:id="@+id/menu_settings" android:title="Show Sql Data" showAsAction="always" />
+  
+  <!--/android:showAsAction="ifRoom"/-->
+  <item android:id="@+id/menu_location" android:title="Get Location" android:showAsAction="ifRoom" />
+  <item android:id="@+id/menu_upload" android:title="Upload Data" android:showAsAction="ifRoom" />
+  <item android:id="@+id/menu_refresh" android:title="Clear Database" android:showAsAction="ifRoom" />
+
+  <!--///showAsAction="always" ///-->
   <item android:id="@+id/menu_about" android:title="About" showAsAction="always" />
   <item android:id="@+id/menu_exit" android:title="Exit" showAsAction="always" />
-  <!--/android:showAsAction="ifRoom"/-->
-  <item android:id="@+id/menu_refresh" android:title="Clear Database" android:showAsAction="ifRoom" />
 </menu>

@@ -1,15 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_main">
+<?xml version="1.0" encoding="utf-8"?>  
+<LinearLayout  
+    xmlns:android="http://schemas.android.com/apk/res/android"  
+android:orientation="vertical"  
+android:layout_width="fill_parent"  
+android:layout_height="fill_parent">
+	<TextView
+		android:text="CURRENT LOCATION"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:layout_width="214.5dp"
+		android:layout_height="wrap_content"
+		android:id="@+id/textView1"
+		android:layout_gravity="center_horizontal"
+		android:layout_marginTop="60.5dp" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
+        android:text="Latitude"  
+        android:textAppearance="?android:attr/textAppearanceLarge"  
+        android:layout_width="match_parent"  
+        android:layout_height="wrap_content" 
+        android:id="@+id/textView2" />
 
-</RelativeLayout>
+    <TextView
+        android:textAppearance="?android:attr/textAppearanceMedium"  
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtlatitude" />
+
+    <TextView  
+        android:text="Longitude"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView4" />
+
+    <TextView  
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtlong" />  
+</LinearLayout>

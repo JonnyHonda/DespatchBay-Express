@@ -26,10 +26,12 @@ namespace ScanSku
 
                 public string TrackingNumber { get; set; } // the TrackingNumber
                 public string ScanTime { get; set; }
+                public double Longitude { get; set; }
+                public double Latitude { get; set; }
 
-                public override string ToString()
+            public override string ToString()
                 {
-                    return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}]", ID, TrackingNumber, ScanTime);
+                    return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}]", ID, TrackingNumber, ScanTime, Longitude, Latitude);
                 }
             }
 
