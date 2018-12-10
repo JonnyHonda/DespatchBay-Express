@@ -37,5 +37,21 @@ android:layout_height="fill_parent">
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/txtlong" />  
+        android:id="@+id/txtlong" />
+	
+<EditText  
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+		android:lines="1"
+		android:maxLines="1"
+		android:singleLine="true"
+        android:id="@+id/txtentry" />  
+	<ToggleButton
+		android:id="@+id/togglebutton"
+		android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+		android:textOff="Finished"
+		android:textOn="Working ..."
+		/>
 </LinearLayout>
