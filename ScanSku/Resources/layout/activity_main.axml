@@ -17,9 +17,42 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
-
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <!-- include layout="@layout/content_main" /-->
+	<LinearLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/textView1"
+			android:layout_marginTop="50dp" 
+		/>
+		<EditText
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:lines="1"
+			android:maxLines="1"
+			android:singleLine="true"
+			android:background="@android:drawable/editbox_background"
+			android:id="@+id/txtentry" />
+		
+<android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+		<ToggleButton
+			android:id="@+id/togglebutton"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textOff="Finished"
+			android:textOn="Working ..."
+		/>
+	</LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>

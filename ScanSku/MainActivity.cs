@@ -19,14 +19,14 @@ using Android;
 using Android.Content.PM;
 using Permission = Android.Content.PM.Permission;
 using Android.Support.V4.App;
-
+using Android.Support.V7.Widget;
+using System.Collections;
 
 namespace DespatchBayExpress
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity,ILocationListener
+    public class MainActivity : AppCompatActivity, ILocationListener
     {
-
         static readonly int REQUEST_LOCATION = 1;
         // static readonly Keycode SCAN_BUTTON = (Keycode)301;
         SQLiteConnection db = null;
@@ -35,6 +35,7 @@ namespace DespatchBayExpress
         Location currentLocation;
         LocationManager locationManager;
         string locationProvider;
+
         public string TAG
         {
             get;
@@ -78,7 +79,8 @@ namespace DespatchBayExpress
                             newScan.ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                             try
                             {
-                                newScan.Longitude = Convert.ToDouble(txtlong.Text);
+                                newScan.Longitude = currentLocation.Longitude;
+                                //newScan.Longitude = Convert.ToDouble(txtlong.Text);
                             }
                             catch
                             {
@@ -86,29 +88,38 @@ namespace DespatchBayExpress
                             }
                             try
                             {
-                                newScan.Latitude = Convert.ToDouble(txtlatitude.Text);
+                                newScan.Latitude = currentLocation.Latitude;
+                                //newScan.Latitude = Convert.ToDouble(txtlatitude.Text);
                             }
                             catch
                             {
                                 newScan.Latitude = 0;
                             }
+                            try
+                            {
+                                db.Insert(newScan);
 
-                            db.Insert(newScan);
-                            
+                            }
+                            catch (SQLiteException ex)
+                            {
+                                Toast.MakeText(this, "Scan Error :" + ex.Message, ToastLength.Short).Show();
+                            }
+
                             scan.RequestFocus();
-                           scan.Text = "";
+                            scan.Text = "";
                         }
                     }
                 };
-               
+
                 ToggleButton togglebutton = FindViewById<ToggleButton>(Resource.Id.togglebutton);
 
-                togglebutton.Click += (o, e) => {
+                togglebutton.Click += (o, e) =>
+                {
                     // Perform action on clicks
                     if (togglebutton.Checked) { }
                     //   Toast.MakeText(this, "Checked", ToastLength.Short).Show();
                     else { }
-                     //   Toast.MakeText(this, "Not checked", ToastLength.Short).Show();
+                    //   Toast.MakeText(this, "Not checked", ToastLength.Short).Show();
                 };
             }
             else
@@ -130,7 +141,8 @@ namespace DespatchBayExpress
                                    Resource.String.permission_location_rationale,
                                    Snackbar.LengthIndefinite)
                             .SetAction(Resource.String.ok,
-                                       new Action<View>(delegate (View obj) {
+                                       new Action<View>(delegate (View obj)
+                                       {
                                            ActivityCompat.RequestPermissions(this, requiredPermissions, REQUEST_LOCATION);
                                        }
                             )
@@ -144,29 +156,85 @@ namespace DespatchBayExpress
             }
         }
 
-/*
-        public override bool OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
+        /*
+         * Menu Creation
+         * 
+         * 
+         * */
+        public override bool OnCreateOptionsMenu(IMenu menu)
         {
-            if (keyCode == SCAN_BUTTON )
-            {
-                if (e.RepeatCount == 0)
-                { }
-                return true;
-            }
-            return base.OnKeyUp(keyCode, e);
+            MenuInflater.Inflate(Resource.Menu.menu_main, menu);
+            return true;
         }
 
-        public override bool OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
+        public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            if (keyCode == SCAN_BUTTON)
+            switch (item.ItemId)
             {
-                if (e.RepeatCount == 0)
-                { }
-                return true;
+                case Resource.Id.menu_settings:
+                    StartActivity(typeof(Settings));
+                    break;
+                case Resource.Id.menu_about:
+                    StartActivity(typeof(About));
+                    break;
+                case Resource.Id.menu_sqldata:
+                    StartActivity(typeof(SqliteActivity));
+                    break;
+                case Resource.Id.menu_exit:
+                    this.FinishAffinity();
+                    break;
+                case Resource.Id.menu_upload:
+                    // This code might be called from within an Activity, for example in an event
+                    // handler for a button click.
+                    Intent downloadIntent = new Intent(this, typeof(DemoIntentService));
+
+                    // This is just one example of passing some values to an IntentService via the Intent:
+                    downloadIntent.PutExtra("file_to_download", "http://www.somewhere.com/file/to/download.zip");
+
+                    StartService(downloadIntent);
+                    break;
+                case Resource.Id.menu_sqldatadelete:
+                    db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
+                    break;
+
             }
-            return base.OnKeyDown(keyCode, e);
+
+            return base.OnOptionsItemSelected(item);
         }
-        */
+
+        /*
+         * This service function handles out of thread work
+         * 
+         * 
+         * */
+        [Service]
+        public class DemoIntentService : IntentService
+        {
+            public DemoIntentService() : base("DemoIntentService")
+            {
+            }
+
+            protected override void OnHandleIntent(Android.Content.Intent intent)
+            {
+                Console.WriteLine("perform some long running work");
+                var startTime = DateTime.UtcNow;
+
+                while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(30))
+                {
+                    // Execute your loop here...
+                }
+                Console.WriteLine("work complete");
+            }
+        }
+
+
+
+        /*
+         * From here on these functions releate to GPS and GPS permissions
+         * 
+         * 
+         *
+         **/
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == REQUEST_LOCATION)
@@ -186,7 +254,7 @@ namespace DespatchBayExpress
                 else
                 {
                     Log.Info(TAG, "Location permission was NOT granted.");
-                  //  Snackbar.Make(rootView, Resource.String.permissions_not_granted, Snackbar.LengthShort).Show();
+                    //  Snackbar.Make(rootView, Resource.String.permissions_not_granted, Snackbar.LengthShort).Show();
                 }
             }
             else
@@ -223,8 +291,8 @@ namespace DespatchBayExpress
             }
             else
             {
-                txtlatitude.Text = currentLocation.Latitude.ToString(("#.00000"));
-                txtlong.Text = currentLocation.Longitude.ToString(("#.00000"));
+                //  txtlatitude.Text = currentLocation.Latitude.ToString(("#.00000"));
+                //  txtlong.Text = currentLocation.Longitude.ToString(("#.00000"));
             }
         }
 
@@ -245,51 +313,14 @@ namespace DespatchBayExpress
         protected override void OnPause()
         {
             base.OnPause();
-            try { 
-            locationManager.RemoveUpdates(this);
-        }
+            try
+            {
+                locationManager.RemoveUpdates(this);
+            }
             catch (Exception ex)
             {
                 Log.Debug(TAG, "Error creating location service: " + ex.Message);
             }
-}
-
-        public override bool OnCreateOptionsMenu(IMenu menu)
-        {
-            MenuInflater.Inflate(Resource.Menu.menu_main, menu);
-            return true;
-        }
-
-        public override bool OnOptionsItemSelected(IMenuItem item)
-        {
-            switch (item.ItemId)
-            {
-                case Resource.Id.menu_about:
-                    StartActivity(typeof(About));
-                    break;
-                case Resource.Id.menu_settings:
-                    StartActivity(typeof(SqliteActivity));
-                    break;
-                case Resource.Id.menu_exit:
-                    this.FinishAffinity();
-                    break;
-                case Resource.Id.menu_upload:
-                    // This code might be called from within an Activity, for example in an event
-                    // handler for a button click.
-                    Intent downloadIntent = new Intent(this, typeof(DemoIntentService));
-
-                    // This is just one example of passing some values to an IntentService via the Intent:
-                    downloadIntent.PutExtra("file_to_download", "http://www.somewhere.com/file/to/download.zip");
-
-                    StartService(downloadIntent);
-                    break;
-                case Resource.Id.menu_refresh:
-                    db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
-                    break;
-
-            }
-
-            return base.OnOptionsItemSelected(item);
         }
 
         public void OnProviderDisabled(string provider)
@@ -304,31 +335,9 @@ namespace DespatchBayExpress
 
         public void OnStatusChanged(string provider, [GeneratedEnum] Availability status, Bundle extras)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
 
-        [Service]
-        public class DemoIntentService : IntentService
-        {
-            public DemoIntentService() : base("DemoIntentService")
-            {
-            }
-
-            protected override void OnHandleIntent(Android.Content.Intent intent)
-            {
-                Console.WriteLine("perform some long running work");
-                var startTime = DateTime.UtcNow;
-
-                while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(30))
-                {
-                    // Execute your loop here...
-                }
-                Console.WriteLine("work complete");
-            }
-        }
-
-   
-  
     }
 }
 
