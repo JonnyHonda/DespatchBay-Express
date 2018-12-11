@@ -1,11 +1,11 @@
 ﻿using Android.App;
 using Android.OS;
 using Android.Widget;
-using ScanSku;
+using DespatchBayExpress;
 using SQLite;
-using static ScanSku.ScanSkuDatabase;
+using static DespatchBayExpress.DespatchBayExpressDataBase;
 
-namespace ScanSku
+namespace DespatchBayExpress
 {
     [Activity(Label = "ScanSku Sqlite Data", MainLauncher = false)]
     public class SqliteActivity : Activity

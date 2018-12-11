@@ -32,4 +32,11 @@
         android:layout_height="wrap_content"
         android:id="@+id/author_name"
         android:gravity="center_horizontal" />
+	    <TextView
+        android:text="@string/git_branch"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/git_branch"
+        android:gravity="center_horizontal" />
 </LinearLayout>
