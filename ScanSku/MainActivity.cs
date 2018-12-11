@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -20,16 +20,17 @@ using Android.Content.PM;
 using Permission = Android.Content.PM.Permission;
 using Android.Support.V4.App;
 
-namespace ScanSku
+
+namespace DespatchBayExpress
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
     public class MainActivity : AppCompatActivity,ILocationListener
     {
 
         static readonly int REQUEST_LOCATION = 1;
-        static readonly Keycode SCAN_BUTTON = (Keycode)301;
+        // static readonly Keycode SCAN_BUTTON = (Keycode)301;
         SQLiteConnection db = null;
-        TextView txtlatitu;
+        TextView txtlatitude;
         TextView txtlong;
         Location currentLocation;
         LocationManager locationManager;
@@ -49,7 +50,7 @@ namespace ScanSku
                 Log.Debug(TAG, "We have permission, go ahead and use the GPS.");
                 InitializeLocationManager();
                 SetContentView(Resource.Layout.activity_main);
-                txtlatitu = FindViewById<TextView>(Resource.Id.txtlatitude);
+                txtlatitude = FindViewById<TextView>(Resource.Id.txtlatitude);
                 txtlong = FindViewById<TextView>(Resource.Id.txtlong);
                 Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
                 SetSupportActionBar(toolbar);
@@ -60,11 +61,46 @@ namespace ScanSku
                         "localscandata.db3");
                 db = new SQLiteConnection(dbPath);
                 // Create the ParcelScans table
-                db.CreateTable<ScanSkuDatabase.ParcelScans>();
+                db.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
                 // db.DeleteAll<ScanSkuDatabase.ParcelScans>();
                 EditText scan = FindViewById<EditText>(Resource.Id.txtentry);
                 scan.Text = "";
                 scan.RequestFocus();
+
+                scan.KeyPress += (object sender, View.KeyEventArgs e) =>
+                {
+                    if ((e.Event.Action == KeyEventActions.Down) && (e.KeyCode == Keycode.Enter))
+                    {
+                        if (e.Event.RepeatCount == 0)
+                        {
+                            var newScan = new DespatchBayExpressDataBase.ParcelScans();
+                            newScan.TrackingNumber = scan.Text;
+                            newScan.ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+                            try
+                            {
+                                newScan.Longitude = Convert.ToDouble(txtlong.Text);
+                            }
+                            catch
+                            {
+                                newScan.Longitude = 0;
+                            }
+                            try
+                            {
+                                newScan.Latitude = Convert.ToDouble(txtlatitude.Text);
+                            }
+                            catch
+                            {
+                                newScan.Latitude = 0;
+                            }
+
+                            db.Insert(newScan);
+                            
+                            scan.RequestFocus();
+                           scan.Text = "";
+                        }
+                    }
+                };
+               
                 ToggleButton togglebutton = FindViewById<ToggleButton>(Resource.Id.togglebutton);
 
                 togglebutton.Click += (o, e) => {
@@ -106,59 +142,31 @@ namespace ScanSku
                 }
 
             }
-           
-
         }
+
+/*
         public override bool OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
         {
-            EditText scan = FindViewById<EditText>(Resource.Id.txtentry);
-      //      Toast.MakeText(this, keyCode.ToString(), ToastLength.Short).Show();
             if (keyCode == SCAN_BUTTON )
             {
-                if (scan.Text.Length > 0) //e.RepeatCount == 0)
-                {
-                    var newScan = new ScanSkuDatabase.ParcelScans();
-                    newScan.TrackingNumber = scan.Text;
-                    newScan.ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                    try
-                    {
-                        newScan.Longitude = Convert.ToDouble(txtlong.Text);
-                    }
-                    catch
-                    {
-                        newScan.Longitude = 0;
-                    }
-                    try
-                    {
-                        newScan.Latitude = Convert.ToDouble(txtlatitu.Text);
-                    }
-                    catch
-                    {
-
-                        newScan.Latitude = 0;
-                    }
-                    db.Insert(newScan);
-                    scan.Text = "";
-                    scan.RequestFocus();
-                }
-                return true;
-            }
-            return base.OnKeyDown(keyCode, e);
-        }
-
-        public override bool OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
-        {
-            if (keyCode == Android.Views.Keycode.F9)
-            {
                 if (e.RepeatCount == 0)
-                {
-                   // MyApplication.BarcodeStopScan();
-                }
+                { }
                 return true;
             }
             return base.OnKeyUp(keyCode, e);
         }
 
+        public override bool OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
+        {
+            if (keyCode == SCAN_BUTTON)
+            {
+                if (e.RepeatCount == 0)
+                { }
+                return true;
+            }
+            return base.OnKeyDown(keyCode, e);
+        }
+        */
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == REQUEST_LOCATION)
@@ -215,8 +223,8 @@ namespace ScanSku
             }
             else
             {
-                txtlatitu.Text = currentLocation.Latitude.ToString();
-                txtlong.Text = currentLocation.Longitude.ToString();
+                txtlatitude.Text = currentLocation.Latitude.ToString(("#.00000"));
+                txtlong.Text = currentLocation.Longitude.ToString(("#.00000"));
             }
         }
 
@@ -276,7 +284,7 @@ namespace ScanSku
                     StartService(downloadIntent);
                     break;
                 case Resource.Id.menu_refresh:
-                    db.DeleteAll<ScanSkuDatabase.ParcelScans>();
+                    db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
                     break;
 
             }

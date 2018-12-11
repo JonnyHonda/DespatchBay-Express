@@ -1,17 +1,17 @@
 ﻿using System;
 using SQLite;
 
-namespace ScanSku
+namespace DespatchBayExpress
 {
     /// <summary>
     /// ScanSku Database
     /// </summary>
-    public class ScanSkuDatabase
+    public class DespatchBayExpressDataBase
         {
         /// <summary>
         /// Initializes a new instance of the <see cref="T:ScanSku.ScanSkuDatabase"/> class.
         /// </summary>
-        public ScanSkuDatabase()
+        public DespatchBayExpressDataBase()
             {
             }
 

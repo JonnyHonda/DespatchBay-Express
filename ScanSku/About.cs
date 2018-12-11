@@ -11,7 +11,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-namespace ScanSku
+namespace DespatchBayExpress
 {
     [Activity(Label = "About")]
     public class About : Activity
