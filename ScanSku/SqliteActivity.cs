@@ -7,7 +7,7 @@ using static DespatchBayExpress.DespatchBayExpressDataBase;
 
 namespace DespatchBayExpress
 {
-    [Activity(Label = "ScanSku Sqlite Data", MainLauncher = false)]
+    [Activity(Label = "Despatch Bay Express Sqlite Data", MainLauncher = false)]
     public class SqliteActivity : Activity
     {
         protected override void OnCreate(Bundle savedInstanceState)
@@ -18,7 +18,7 @@ namespace DespatchBayExpress
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                     "localscandata.db3");
             var db = new SQLiteConnection(dbPath);
-            var parcelScans = db.Table<ParcelScans>();
+            TableQuery<ParcelScans> parcelScans = db.Table<ParcelScans>();
             TextView Tv = FindViewById<TextView>(Resource.Id.TEXT_STATUS_ID);
 
             Tv.Text = "";
@@ -32,7 +32,20 @@ namespace DespatchBayExpress
                     Tv.Append(System.Environment.NewLine);
                 }
             }catch{}
+
+            TableQuery<TrackingNumberPatterns> patterns = db.Table<TrackingNumberPatterns>();
             
+            Tv.Append("======= TrackingNumberPatterns ==========");
+            Tv.Append(System.Environment.NewLine);
+            try
+            {
+                foreach (var pattern in patterns)
+                {
+                    Tv.Append(pattern.ToString());
+                    Tv.Append(System.Environment.NewLine);
+                }
+            }
+            catch { }
 
 
             Button cancel_button = FindViewById<Button>(Resource.Id.btn_sqlcancel);
