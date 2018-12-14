@@ -114,10 +114,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\SqlLayout.axml" />
+    <AndroidResource Include="Resources\layout\activity_sqlite.axml" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\About.axml" />
+    <AndroidResource Include="Resources\layout\activity_about.axml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
@@ -138,7 +138,7 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\Settings.axml">
+    <AndroidResource Include="Resources\layout\activity_settings.axml">
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>
@@ -146,12 +146,7 @@
     <AndroidResource Include="Resources\menu\menu_settings.xml" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\Main.axml">
-      <SubType>Designer</SubType>
-    </AndroidResource>
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\layout\ListViewItem.axml">
+    <AndroidResource Include="Resources\layout\recycler_view_item.axml">
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>

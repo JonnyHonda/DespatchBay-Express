@@ -25,7 +25,7 @@ namespace DespatchBayExpress
             OnCreateViewHolder(ViewGroup parent, int viewType)
         {
             View itemView = LayoutInflater.From(parent.Context).
-                        Inflate(Resource.Layout.ListViewItem
+                        Inflate(Resource.Layout.recycler_view_item
                         , parent, false);
             TrackingNumberViewHolder vh = new TrackingNumberViewHolder(itemView);
             return vh;

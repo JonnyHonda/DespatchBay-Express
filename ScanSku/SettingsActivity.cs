@@ -26,7 +26,7 @@ namespace DespatchBayExpress
             RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
 
-            SetContentView(Resource.Layout.Settings);
+            SetContentView(Resource.Layout.activity_settings);
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
             string JsonTrackingRegexs = @"[{

@@ -122,7 +122,7 @@ namespace DespatchBayExpress
                             if (patternFound)
                             {
                                 var newScan = new DespatchBayExpressDataBase.ParcelScans();
-                                newScan.TrackingNumber = TrackingScan.Text;
+                                newScan.TrackingNumber = TrackingScan.Text.ToUpper();
                                 newScan.ScanTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
                                 newScan.Sent = null;
                                 try {

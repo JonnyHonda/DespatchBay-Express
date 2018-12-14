@@ -21,7 +21,7 @@ namespace DespatchBayExpress
         {
             RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
-            SetContentView(Resource.Layout.About);
+            SetContentView(Resource.Layout.activity_about);
             // Create your application here
         }
     }

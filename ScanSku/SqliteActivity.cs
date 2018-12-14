@@ -15,7 +15,7 @@ namespace DespatchBayExpress
         {
             RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
-            SetContentView(Resource.Layout.SqlLayout);
+            SetContentView(Resource.Layout.activity_sqlite);
             string dbPath = System.IO.Path.Combine(
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                     "localscandata.db3");
