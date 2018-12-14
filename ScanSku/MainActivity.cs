@@ -124,6 +124,7 @@ namespace DespatchBayExpress
                                 var newScan = new DespatchBayExpressDataBase.ParcelScans();
                                 newScan.TrackingNumber = TrackingScan.Text;
                                 newScan.ScanTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                                newScan.Sent = null;
                                 try {
                                     newScan.Longitude = currentLocation.Longitude;
                                 }
@@ -224,13 +225,13 @@ namespace DespatchBayExpress
             switch (item.ItemId)
             {
                 case Resource.Id.menu_location:
-                    
+                    Toast.MakeText(this, "Not implemented", ToastLength.Short).Show();
                     break;
                 case Resource.Id.menu_settings:
-                    StartActivity(typeof(Settings));
+                    StartActivity(typeof(SettingsActivity));
                     break;
                 case Resource.Id.menu_about:
-                    StartActivity(typeof(About));
+                    StartActivity(typeof(AboutActivity));
                     break;
                 case Resource.Id.menu_sqldata:
                     StartActivity(typeof(SqliteActivity));
@@ -239,6 +240,8 @@ namespace DespatchBayExpress
                     this.FinishAffinity();
                     break;
                 case Resource.Id.menu_upload:
+                    Toast.MakeText(this, "Not implemented", ToastLength.Short).Show();
+                    /*
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
                     Intent downloadIntent = new Intent(this, typeof(DemoIntentService));
@@ -247,6 +250,7 @@ namespace DespatchBayExpress
                     downloadIntent.PutExtra("file_to_download", "http://www.somewhere.com/file/to/download.zip");
 
                     StartService(downloadIntent);
+                    */
                     break;
                 case Resource.Id.menu_sqldatadelete:
                     db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();

@@ -5,11 +5,11 @@
   
   <!--///android:showAsAction="ifRoom" ///-->
   <item android:id="@+id/menu_location" android:title="Get Location" android:showAsAction="ifRoom" />
-  <item android:id="@+id/menu_sqldata" android:title="Show Sql Data" showAsAction="ifRoom" />
+  <item android:id="@+id/menu_sqldata" android:title="Show Data" showAsAction="ifRoom" />
   <item android:id="@+id/menu_sqldatadelete" android:title="Delete Sql Data" showAsAction="ifRoom" />
 
   <!--///showAsAction="always" ///-->
-  <item android:id="@+id/menu_settings" android:title="Settings" showAsAction="always" />
+  <item android:id="@+id/menu_settings" android:title="Load Settings" showAsAction="always" />
   <item android:id="@+id/menu_about" android:title="About" showAsAction="always" />
   <item android:id="@+id/menu_exit" android:title="Exit" showAsAction="always" />
 </menu>

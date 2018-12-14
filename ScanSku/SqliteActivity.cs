@@ -1,4 +1,5 @@
 ﻿using Android.App;
+using Android.Content.PM;
 using Android.OS;
 using Android.Widget;
 using DespatchBayExpress;
@@ -7,11 +8,12 @@ using static DespatchBayExpress.DespatchBayExpressDataBase;
 
 namespace DespatchBayExpress
 {
-    [Activity(Label = "Despatch Bay Express Sqlite Data", MainLauncher = false)]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
     public class SqliteActivity : Activity
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.SqlLayout);
             string dbPath = System.IO.Path.Combine(

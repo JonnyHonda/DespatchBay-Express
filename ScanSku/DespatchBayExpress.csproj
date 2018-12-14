@@ -59,11 +59,11 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="About.cs" />
+    <Compile Include="AboutActivity.cs" />
     <Compile Include="BarcodeScan.cs" />
     <Compile Include="TrackingNumberDataAdapter.cs" />
     <Compile Include="TrackingNumberViewHolder.cs" />
-    <Compile Include="Settings.cs" />
+    <Compile Include="SettingsActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
