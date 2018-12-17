@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="AboutActivity.cs" />
     <Compile Include="BarcodeScan.cs" />
+    <Compile Include="Collection.cs" />
     <Compile Include="TrackingNumberDataAdapter.cs" />
     <Compile Include="TrackingNumberViewHolder.cs" />
     <Compile Include="SettingsActivity.cs" />
@@ -93,6 +94,9 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher.png" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Http">
+      <Version>2.2.29</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.1</Version>
     </PackageReference>
