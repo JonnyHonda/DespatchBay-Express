@@ -15,31 +15,22 @@ namespace DespatchBayExpress
     // BarcodeScan: contains image resource ID and caption:
     public class BarcodeScan
     {
-        /*
-        // BarcodeScan ID for this photo:
-        public int mPhotoID;
-        */
-
         // Caption text for this photo:
-        public string mCaption;
+        public string BarcodeText;
 
-        /*
-        // Return the ID of the photo:
-        public int PhotoID
-        {
-            get { return mPhotoID; }
-        }
-        */
-
-        // Return the Caption of the photo:
+        /// <summary>
+        /// 
+        /// </summary>
         public string Caption
         {
-            get { return mCaption; }
+            get { return BarcodeText; }
         }
         
     }
 
-    // BarcodeScan album: holds image resource IDs and caption:
+    /// <summary>
+    /// 
+    /// </summary>
     public class BarcodeScannerList
     {
         static string dbPath = System.IO.Path.Combine(
@@ -48,7 +39,7 @@ namespace DespatchBayExpress
         SQLiteConnection db = new SQLiteConnection(dbPath);
 
         List<BarcodeScan> CurrentScans = new List<BarcodeScan>();
-        // Array of barcodes that make up the album:
+        // Array of barcodes that make up the RecycleView
         private BarcodeScan[] barcodes;
 
 
@@ -60,11 +51,11 @@ namespace DespatchBayExpress
 
         public void FetchBarcodeList()
         {
-            var scans = db.Table<ParcelScans>();
+            var scans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
             CurrentScans.Clear();
             foreach (var scan in scans)
             {
-                BarcodeScan t = new BarcodeScan { mCaption = scan.TrackingNumber };
+                BarcodeScan t = new BarcodeScan { BarcodeText = scan.TrackingNumber };
                 CurrentScans.Add(t);
             }
             barcodes = CurrentScans.ToArray();

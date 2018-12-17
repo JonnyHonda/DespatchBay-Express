@@ -215,6 +215,7 @@ namespace DespatchBayExpress
             return true;
         }
 
+
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
             switch (item.ItemId)
@@ -241,7 +242,9 @@ namespace DespatchBayExpress
                     // handler for a button click.
                     Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
                     // This is just one example of passing some values to an IntentService via the Intent:
-                    submitDataIntent.PutExtra("httpEndPoint", "http://requestbin.fullcontact.com/10mevnb1");
+                    submitDataIntent.PutExtra("httpEndPoint", "https://366miqlp8d.execute-api.eu-west-1.amazonaws.com/prod/122342299fa8d572");
+                    submitDataIntent.PutExtra("userAgent", "Man-In-VAN Handheld Device");
+                    submitDataIntent.PutExtra("token", "NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf");
                     try
                     {
                         submitDataIntent.PutExtra("lontitude", currentLocation.Longitude);
@@ -287,7 +290,9 @@ namespace DespatchBayExpress
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
                 string lontitude = intent.GetStringExtra("lontitude");
                 string latitude = intent.GetStringExtra("latitude");
-
+                string userAgent = intent.GetStringExtra("userAgent");
+                string token = intent.GetStringExtra("token");
+               
                 string dbPath = intent.GetStringExtra("dbPath");
                 Console.WriteLine("INTENT - Connect to Database");
                 SQLiteConnection db = new SQLiteConnection(dbPath);
@@ -306,7 +311,8 @@ namespace DespatchBayExpress
                 oCollection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
                 Console.WriteLine("INTENT - Collection created");
 
-                TableQuery<ParcelScans> parcelScans = db.Table<ParcelScans>();
+                // TableQuery<ParcelScans> parcelScans = db.Table<ParcelScans>();
+                var parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
                 Scan oScan = new Scan();
                 List<Scan> lScans = new List<Scan>();
                 foreach (var parcel in parcelScans)
@@ -332,6 +338,9 @@ namespace DespatchBayExpress
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
+                httpWebRequest.UserAgent = userAgent;
+                // `x-api-key` with a value of `NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf`
+                httpWebRequest.Headers["x-api-key"] = token;
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                 {
                     streamWriter.Write(sJSON);
@@ -347,7 +356,12 @@ namespace DespatchBayExpress
                     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                     {
                         var result = streamReader.ReadToEnd();
+
                         Console.WriteLine("INTENT - "+ result);
+                        if (result == "ok")
+                        {
+                            parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
+                        }
                     }
                     httpResponse.Close();
                     Console.WriteLine("INTENT - Response Closes");
