@@ -59,11 +59,12 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="About.cs" />
+    <Compile Include="AboutActivity.cs" />
     <Compile Include="BarcodeScan.cs" />
+    <Compile Include="Collection.cs" />
     <Compile Include="TrackingNumberDataAdapter.cs" />
     <Compile Include="TrackingNumberViewHolder.cs" />
-    <Compile Include="Settings.cs" />
+    <Compile Include="SettingsActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -93,6 +94,9 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher.png" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Http">
+      <Version>2.2.29</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.1</Version>
     </PackageReference>
@@ -114,10 +118,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\SqlLayout.axml" />
+    <AndroidResource Include="Resources\layout\activity_sqlite.axml" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\About.axml" />
+    <AndroidResource Include="Resources\layout\activity_about.axml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
@@ -138,7 +142,7 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\Settings.axml">
+    <AndroidResource Include="Resources\layout\activity_settings.axml">
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>
@@ -146,12 +150,7 @@
     <AndroidResource Include="Resources\menu\menu_settings.xml" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\Main.axml">
-      <SubType>Designer</SubType>
-    </AndroidResource>
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\layout\ListViewItem.axml">
+    <AndroidResource Include="Resources\layout\recycler_view_item.axml">
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>

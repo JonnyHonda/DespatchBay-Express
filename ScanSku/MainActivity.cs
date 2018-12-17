@@ -24,6 +24,9 @@ using System.Collections;
 using Android.Media;
 using System.Text.RegularExpressions;
 using static DespatchBayExpress.DespatchBayExpressDataBase;
+using System.Net;
+using System.IO;
+using System.Net.Http;
 
 namespace DespatchBayExpress
 {
@@ -33,12 +36,12 @@ namespace DespatchBayExpress
         static readonly int REQUEST_LOCATION = 1;
         // static readonly Keycode SCAN_BUTTON = (Keycode)301;
         SQLiteConnection db = null;
-        //TextView txtlatitude;
-        //TextView txtlong;
+
         TextView coords;
         Location currentLocation;
         LocationManager locationManager;
         string locationProvider;
+        string dbPath;
 
         MediaPlayer mediaPlayer;
 
@@ -53,17 +56,19 @@ namespace DespatchBayExpress
         TrackingNumberDataAdapter mAdapter;
         BarcodeScannerList mBarcodeScannerList;
         EditText TrackingScan;
+ 
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
-            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
-            {
-                string dbPath = System.IO.Path.Combine(
+            dbPath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
-                db = new SQLiteConnection(dbPath);
+            db = new SQLiteConnection(dbPath);
+            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
+            {
+                
                 // Create the ParcelScans table
                 db.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
                 //db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
@@ -77,7 +82,12 @@ namespace DespatchBayExpress
 
                 // Plug in the linear layout manager:
                 mLayoutManager = new LinearLayoutManager(this);
+                mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical,false);
+
+
+
                 mRecyclerView.SetLayoutManager(mLayoutManager);
+                
 
                 // Plug in my adapter:
                 mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
@@ -122,8 +132,9 @@ namespace DespatchBayExpress
                             if (patternFound)
                             {
                                 var newScan = new DespatchBayExpressDataBase.ParcelScans();
-                                newScan.TrackingNumber = TrackingScan.Text;
+                                newScan.TrackingNumber = TrackingScan.Text.ToUpper();
                                 newScan.ScanTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                                newScan.Sent = null;
                                 try {
                                     newScan.Longitude = currentLocation.Longitude;
                                 }
@@ -155,21 +166,6 @@ namespace DespatchBayExpress
                             TrackingScan.Text = "";
                         }
                     }
-                };
-                
-
-                
-                ToggleButton togglebutton = FindViewById<ToggleButton>(Resource.Id.togglebutton);
-
-                togglebutton.Click += (o, e) =>
-                {
-                    // Perform action on clicks
-                    if (togglebutton.Checked) {
-
-                    }
-                    
-                    else { }
-                    //   Toast.MakeText(this, "Not checked", ToastLength.Short).Show();
                 };
                 
             }
@@ -219,18 +215,19 @@ namespace DespatchBayExpress
             return true;
         }
 
+
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
             switch (item.ItemId)
             {
                 case Resource.Id.menu_location:
-                    
+                    Toast.MakeText(this, "Not implemented", ToastLength.Short).Show();
                     break;
                 case Resource.Id.menu_settings:
-                    StartActivity(typeof(Settings));
+                    StartActivity(typeof(SettingsActivity));
                     break;
                 case Resource.Id.menu_about:
-                    StartActivity(typeof(About));
+                    StartActivity(typeof(AboutActivity));
                     break;
                 case Resource.Id.menu_sqldata:
                     StartActivity(typeof(SqliteActivity));
@@ -239,14 +236,28 @@ namespace DespatchBayExpress
                     this.FinishAffinity();
                     break;
                 case Resource.Id.menu_upload:
+                    Toast.MakeText(this, "Bare with...", ToastLength.Short).Show();
+
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
-                    Intent downloadIntent = new Intent(this, typeof(DemoIntentService));
-
+                    Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
                     // This is just one example of passing some values to an IntentService via the Intent:
-                    downloadIntent.PutExtra("file_to_download", "http://www.somewhere.com/file/to/download.zip");
+                    submitDataIntent.PutExtra("httpEndPoint", "https://366miqlp8d.execute-api.eu-west-1.amazonaws.com/prod/122342299fa8d572");
+                    submitDataIntent.PutExtra("userAgent", "Man-In-VAN Handheld Device");
+                    submitDataIntent.PutExtra("token", "NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf");
+                    try
+                    {
+                        submitDataIntent.PutExtra("lontitude", currentLocation.Longitude);
+                        submitDataIntent.PutExtra("latitude", currentLocation.Latitude);
+                    }
+                    catch
+                    {
+                        submitDataIntent.PutExtra("lontitude", "");
+                        submitDataIntent.PutExtra("latitude", "");
+                    }
+                    submitDataIntent.PutExtra("dbPath", dbPath);
 
-                    StartService(downloadIntent);
+                    StartService(submitDataIntent);
                     break;
                 case Resource.Id.menu_sqldatadelete:
                     db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
@@ -265,25 +276,104 @@ namespace DespatchBayExpress
          * 
          * */
         [Service]
-        public class DemoIntentService : IntentService
+        public class SubmitDataIntentService : IntentService
         {
-            public DemoIntentService() : base("DemoIntentService")
+            public SubmitDataIntentService() : base("SubmitDataIntentService")
             {
             }
 
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
-                Console.WriteLine("perform some long running work");
+                
+                Console.WriteLine("INTENT - Perform some long running work");
                 var startTime = DateTime.UtcNow;
-
-                while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(30))
+                string httpEndPoint = intent.GetStringExtra("httpEndPoint");
+                string lontitude = intent.GetStringExtra("lontitude");
+                string latitude = intent.GetStringExtra("latitude");
+                string userAgent = intent.GetStringExtra("userAgent");
+                string token = intent.GetStringExtra("token");
+               
+                string dbPath = intent.GetStringExtra("dbPath");
+                Console.WriteLine("INTENT - Connect to Database");
+                SQLiteConnection db = new SQLiteConnection(dbPath);
+                // Create a new Collection
+                Collection oCollection = new Collection();
+                // Set the Base values
+                Gps oGps = new Gps();
+                try
                 {
-                    // Execute your loop here...
+                    oGps.Latitude = Convert.ToDouble(latitude); // currentLocation.Latitude;
+                    oGps.Longitude = Convert.ToDouble(lontitude); // currentLocation.Longitude;
+                }
+                catch { }
+                oCollection.Gps = oGps;
+
+                oCollection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                Console.WriteLine("INTENT - Collection created");
+
+                // TableQuery<ParcelScans> parcelScans = db.Table<ParcelScans>();
+                var parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
+                Scan oScan = new Scan();
+                List<Scan> lScans = new List<Scan>();
+                foreach (var parcel in parcelScans)
+                {
+                    Gps oScanGps = new Gps();
+                    oScan.Timestamp = parcel.ScanTime;
+                    try
+                    {
+                        oScanGps.Longitude = (double)parcel.Longitude;
+                        oScanGps.Latitude = (double)parcel.Latitude;
+                    }
+                    catch { }
+                    oScan.Barcode = parcel.TrackingNumber;
+                    oScan.Gps = oScanGps;
+                    lScans.Add(oScan);
+                }
+                oCollection.Scans = lScans;
+                string sJSON;
+                Console.WriteLine("INTENT - JSON Created");
+                sJSON = oCollection.ToJson();
+                Console.WriteLine("INTENT - "+ sJSON);
+                Console.WriteLine("INTENT - Webrequest Created");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                httpWebRequest.UserAgent = userAgent;
+                // `x-api-key` with a value of `NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf`
+                httpWebRequest.Headers["x-api-key"] = token;
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(sJSON);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
+                Console.WriteLine("INTENT - Fetch Response");
+                try
+                {
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+
+                        Console.WriteLine("INTENT - "+ result);
+                        if (result == "ok")
+                        {
+                            parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
+                        }
+                    }
+                    httpResponse.Close();
+                    Console.WriteLine("INTENT - Response Closes");
+                    
+                }
+                catch (Exception ex){
+                    Console.WriteLine("INTENT - Response Failed");
+                    Console.WriteLine(ex.Message);
                 }
                 Console.WriteLine("work complete");
             }
         }
-
         /*
          * From here on these functions releate to GPS and GPS permissions
          * 
@@ -293,7 +383,7 @@ namespace DespatchBayExpress
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == REQUEST_LOCATION)
-            {
+            {        
                 // Received permission result for GPS permission.
                 Log.Info(TAG, "Received response for Location permission request.");
                 var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);

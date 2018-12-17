@@ -6,6 +6,7 @@ using System.Text;
 
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -13,13 +14,14 @@ using Android.Widget;
 
 namespace DespatchBayExpress
 {
-    [Activity(Label = "About")]
-    public class About : Activity
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar",MainLauncher =false)]
+    public class AboutActivity : Activity
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
-            SetContentView(Resource.Layout.About);
+            SetContentView(Resource.Layout.activity_about);
             // Create your application here
         }
     }

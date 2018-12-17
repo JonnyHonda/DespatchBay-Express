@@ -17,7 +17,7 @@ using Android.Content.PM;
 namespace DespatchBayExpress
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
-    public class Settings : AppCompatActivity
+    public class SettingsActivity : AppCompatActivity
     {
         SQLiteConnection db = null;
 
@@ -26,7 +26,7 @@ namespace DespatchBayExpress
             RequestedOrientation = ScreenOrientation.Portrait;
             base.OnCreate(savedInstanceState);
 
-            SetContentView(Resource.Layout.Settings);
+            SetContentView(Resource.Layout.activity_settings);
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
             string JsonTrackingRegexs = @"[{
@@ -101,7 +101,7 @@ namespace DespatchBayExpress
                     break;
 
                 case Resource.Id.menu_about:
-                    StartActivity(typeof(About));
+                    StartActivity(typeof(AboutActivity));
                     break;
             }
             return base.OnOptionsItemSelected(item);

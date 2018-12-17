@@ -19,7 +19,6 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
     </android.support.design.widget.AppBarLayout>
 
-    <!-- include layout="@layout/content_main" /-->
 	<LinearLayout
 		xmlns:android="http://schemas.android.com/apk/res/android"
 		android:orientation="vertical"
@@ -41,13 +40,6 @@
 			android:background="@android:drawable/editbox_background"
 			android:id="@+id/txtentry" />
  
-		<ToggleButton
-			android:id="@+id/togglebutton"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:textOff="Finished"
-			android:textOn="Working ..."
-		/>
 		<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 			android:orientation="vertical"
 			android:layout_width="fill_parent"
@@ -55,9 +47,12 @@
 			<android.support.v7.widget.RecyclerView
 				android:id="@+id/recyclerView"
 				android:scrollbars="vertical"
-				android:layout_width="fill_parent"
+					android:layout_width="fill_parent"
 				android:layout_height="320dp"
-				android:layout_marginBottom="0.0dp" />
+				android:layout_marginBottom="0.0dp"
+				app:stackFromEnd="false"
+				app:reverseLayout="true"
+			/>
 		
 			<TextView
 			android:layout_width="match_parent"
@@ -65,7 +60,7 @@
 			android:id="@+id/coords"
 				android:gravity="right"
 				android:text="No GPS fix yet"
-			android:layout_marginTop="0dp" 
+				android:layout_marginTop="0dp" 
 		/>
 		
 		</LinearLayout>
