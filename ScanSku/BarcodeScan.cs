@@ -15,13 +15,13 @@ namespace DespatchBayExpress
     // BarcodeScan: contains image resource ID and caption:
     public class BarcodeScan
     {
-        // Caption text for this photo:
+        // GetBarcodeText text for this Barcode:
         public string BarcodeText;
 
         /// <summary>
         /// 
         /// </summary>
-        public string Caption
+        public string GetBarcodeText
         {
             get { return BarcodeText; }
         }
@@ -60,13 +60,13 @@ namespace DespatchBayExpress
             }
             barcodes = CurrentScans.ToArray();
         }
-        // Return the number of photos in the photo album:
+        // Return the number of barcodes in the view 
         public int NumBarcodes
         {
             get { return barcodes.Length; }
         }
         
-        // Indexer (read only) for accessing a photo:
+        // Indexer (read only) for accessing a barcode:
         public BarcodeScan this[int i]
         {
             get { return barcodes[i]; }

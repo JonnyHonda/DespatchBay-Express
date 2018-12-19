@@ -30,6 +30,7 @@ using System.Net.Http;
 
 namespace DespatchBayExpress
 {
+    
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, ILocationListener
     {
@@ -44,23 +45,25 @@ namespace DespatchBayExpress
         string dbPath;
 
         MediaPlayer mediaPlayer;
-
-        public string TAG
-        {
-            get;
-            private set;
-        }
-
+        
         RecyclerView mRecyclerView;
         RecyclerView.LayoutManager mLayoutManager;
         TrackingNumberDataAdapter mAdapter;
         BarcodeScannerList mBarcodeScannerList;
         EditText TrackingScan;
- 
+
+        static bool GLOBAL_RECYCLEVIEW_REFRESHED = false;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             RequestedOrientation = ScreenOrientation.Portrait;
+            Context mContext = Application.Context;
+            AppPreferences ap = new AppPreferences(mContext);
+            if (string.IsNullOrEmpty(ap.getAccessKey("httpEndPoint")))
+
+            {
+                StartActivity(typeof(SettingsActivity));
+            }
             base.OnCreate(savedInstanceState);
             dbPath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
@@ -75,28 +78,42 @@ namespace DespatchBayExpress
 
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
 
+                ///
+                System.Timers.Timer Timer1 = new System.Timers.Timer();
+                Timer1.Start();
+                Timer1.Interval = 3000;
+                Timer1.Enabled = true;
+                Timer1.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+                {
+                    RunOnUiThread(() =>
+                    {
+                        if (GLOBAL_RECYCLEVIEW_REFRESHED) { 
+                        //  SetContentView(Resource.Layout.activity_main);
+                           GLOBAL_RECYCLEVIEW_REFRESHED = false;
+                            Toast.MakeText(Application.Context, "Upload Complete", ToastLength.Long).Show();
+                            this.Recreate();
+                         }
+
+                    });
+                };
+
                 mBarcodeScannerList = new BarcodeScannerList();
                 SetContentView(Resource.Layout.activity_main);
                 
                 mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
 
                 // Plug in the linear layout manager:
-                mLayoutManager = new LinearLayoutManager(this);
                 mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical,false);
-
-
-
                 mRecyclerView.SetLayoutManager(mLayoutManager);
                 
-
                 // Plug in my adapter:
                 mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
                 mRecyclerView.SetAdapter(mAdapter);
                 // We have permission, go ahead and use the GPS.
-                Log.Debug(TAG, "We have permission, go ahead and use the GPS.");
+                Log.Debug("GPS", "We have permission, go ahead and use the GPS.");
                 InitializeLocationManager();
                 
-                coords = FindViewById<TextView>(Resource.Id.coords);
+                coords = FindViewById<TextView>(Resource.Id.footer_text);
                 Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
                 SetSupportActionBar(toolbar);
                
@@ -115,7 +132,6 @@ namespace DespatchBayExpress
                             TableQuery<TrackingNumberPatterns> trackingPatterns = db.Table<TrackingNumberPatterns>();
                             
                             bool patternFound = false;
-                            
                             try
                             {
                                 foreach (var trackingPattern in trackingPatterns)
@@ -172,14 +188,14 @@ namespace DespatchBayExpress
             else
             {
                 // GPS permission is not granted. If necessary display rationale & request.
-                Log.Debug(TAG, "GPS permission is not granted");
+                Log.Debug("GPS", "GPS permission is not granted");
 
                 if (ActivityCompat.ShouldShowRequestPermissionRationale(this, Manifest.Permission.AccessFineLocation))
                 {
                     // Provide an additional rationale to the user if the permission was not granted
                     // and the user would benefit from additional context for the use of the permission.
                     // For example if the user has previously denied the permission.
-                    Log.Info(TAG, "Displaying camera permission rationale to provide additional context.");
+                    Log.Info("GPS", "Displaying GPS permission rationale to provide additional context.");
                     var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
 
 
@@ -237,12 +253,16 @@ namespace DespatchBayExpress
                     break;
                 case Resource.Id.menu_upload:
                     Toast.MakeText(this, "Bare with...", ToastLength.Short).Show();
-
+                    Context mContext = Application.Context;
+                    AppPreferences ap = new AppPreferences(mContext);
+                    string httpEndPoint = ap.getAccessKey("httpEndPoint");
+ 
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
                     Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
-                    // This is just one example of passing some values to an IntentService via the Intent:
-                    submitDataIntent.PutExtra("httpEndPoint", "https://366miqlp8d.execute-api.eu-west-1.amazonaws.com/prod/122342299fa8d572");
+                    
+                    // Pass some vars to the Intent
+                    submitDataIntent.PutExtra("httpEndPoint", httpEndPoint);
                     submitDataIntent.PutExtra("userAgent", "Man-In-VAN Handheld Device");
                     submitDataIntent.PutExtra("token", "NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf");
                     try
@@ -284,8 +304,7 @@ namespace DespatchBayExpress
 
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
-                
-                Console.WriteLine("INTENT - Perform some long running work");
+                Log.Info("TAG-INTENT", "INTENT - Perform some long running work");
                 var startTime = DateTime.UtcNow;
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
                 string lontitude = intent.GetStringExtra("lontitude");
@@ -294,7 +313,7 @@ namespace DespatchBayExpress
                 string token = intent.GetStringExtra("token");
                
                 string dbPath = intent.GetStringExtra("dbPath");
-                Console.WriteLine("INTENT - Connect to Database");
+                Log.Info("TAG-INTENT", "INTENT - Connect to Database");
                 SQLiteConnection db = new SQLiteConnection(dbPath);
                 // Create a new Collection
                 Collection oCollection = new Collection();
@@ -309,9 +328,8 @@ namespace DespatchBayExpress
                 oCollection.Gps = oGps;
 
                 oCollection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
-                Console.WriteLine("INTENT - Collection created");
-
-                // TableQuery<ParcelScans> parcelScans = db.Table<ParcelScans>();
+                Log.Info("TAG-INTENT", "INTENT - Collection created");
+                
                 var parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
                 Scan oScan = new Scan();
                 List<Scan> lScans = new List<Scan>();
@@ -331,10 +349,10 @@ namespace DespatchBayExpress
                 }
                 oCollection.Scans = lScans;
                 string sJSON;
-                Console.WriteLine("INTENT - JSON Created");
+                Log.Info("TAG-INTENT", "INTENT - JSON Created");
                 sJSON = oCollection.ToJson();
-                Console.WriteLine("INTENT - "+ sJSON);
-                Console.WriteLine("INTENT - Webrequest Created");
+                Log.Info("TAG-INTENT", "INTENT - " + sJSON);
+                Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
@@ -347,7 +365,7 @@ namespace DespatchBayExpress
                     streamWriter.Flush();
                     streamWriter.Close();
                 }
-                Console.WriteLine("INTENT - Fetch Response");
+                Log.Info("TAG-INTENT", "INTENT - Fetch Response");
                 try
                 {
                     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
@@ -357,21 +375,21 @@ namespace DespatchBayExpress
                     {
                         var result = streamReader.ReadToEnd();
 
-                        Console.WriteLine("INTENT - "+ result);
-                        if (result == "ok")
+                        Log.Info("TAG-INTENT", "INTENT - " + result);
+                      //  if (result == "ok")
                         {
                             parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
                         }
                     }
                     httpResponse.Close();
-                    Console.WriteLine("INTENT - Response Closes");
-                    
+                    Log.Info("TAG-INTENT", "INTENT - Response Closes");
                 }
                 catch (Exception ex){
-                    Console.WriteLine("INTENT - Response Failed");
-                    Console.WriteLine(ex.Message);
+                    Log.Info("TAG-INTENT", "INTENT - Response Failed");
+                    Log.Info("TAG-INTENT", ex.Message);
                 }
-                Console.WriteLine("work complete");
+                Log.Info("TAG-INTENT", "INTENT work complete");
+                GLOBAL_RECYCLEVIEW_REFRESHED = true;
             }
         }
         /*
@@ -385,20 +403,20 @@ namespace DespatchBayExpress
             if (requestCode == REQUEST_LOCATION)
             {        
                 // Received permission result for GPS permission.
-                Log.Info(TAG, "Received response for Location permission request.");
+                Log.Info("GPS", "Received response for Location permission request.");
                 var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
                 // Check if the only required permission has been granted
                 if ((grantResults.Length == 1) && (grantResults[0] == Permission.Granted))
                 {
                     // Location permission has been granted, okay to retrieve the location of the device.
-                    Log.Info(TAG, "Location permission has now been granted.");
+                    Log.Info("GPS", "Location permission has now been granted.");
                     // Snackbar.Make(rootView, Resource.String.permission_available_location, Snackbar.LengthShort).Show();
                     this.FinishAffinity();
                     ;
                 }
                 else
                 {
-                    Log.Info(TAG, "Location permission was NOT granted.");
+                    Log.Info("GPS", "Location permission was NOT granted.");
                     //  Snackbar.Make(rootView, Resource.String.permissions_not_granted, Snackbar.LengthShort).Show();
                 }
             }
@@ -424,7 +442,7 @@ namespace DespatchBayExpress
             {
                 locationProvider = string.Empty;
             }
-            Log.Debug(TAG, "Using " + locationProvider + ".");
+            Log.Debug("GPS", "Using " + locationProvider + ".");
         }
 
         public void OnLocationChanged(Location location)
@@ -438,7 +456,6 @@ namespace DespatchBayExpress
             }
             else
             {
-                TrackingScan.SetBackgroundColor(Android.Graphics.Color.LightGreen);
                 coords.Text = "Lat:" + currentLocation.Latitude.ToString(("#.00000")) + " / Long:" + currentLocation.Longitude.ToString(("#.00000"));
             }
         }
@@ -452,7 +469,7 @@ namespace DespatchBayExpress
             }
             catch (Exception ex)
             {
-                Log.Debug(TAG, "Error creating location service: " + ex.Message);
+                Log.Debug("GPS", "Error creating location service: " + ex.Message);
             }
 
         }
@@ -466,7 +483,7 @@ namespace DespatchBayExpress
             }
             catch (Exception ex)
             {
-                Log.Debug(TAG, "Error creating location service: " + ex.Message);
+                Log.Debug("GPS", "Error creating location service: " + ex.Message);
             }
         }
 
