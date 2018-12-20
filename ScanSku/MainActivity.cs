@@ -37,13 +37,13 @@ namespace DespatchBayExpress
         static readonly int REQUEST_LOCATION = 1;
         // static readonly Keycode SCAN_BUTTON = (Keycode)301;
         SQLiteConnection databaseConnection = null;
+        string databasePath;
 
         TextView coordinates;
         Location currentLocation;
         LocationManager locationManager;
         string locationProvider;
-        string databasePath;
-
+  
         MediaPlayer mediaPlayer;
         
         RecyclerView mRecyclerView;
@@ -151,7 +151,7 @@ namespace DespatchBayExpress
                             {
                                 var newScan = new DespatchBayExpressDataBase.ParcelScans();
                                 newScan.TrackingNumber = TrackingScan.Text.ToUpper();
-                                newScan.ScanTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                                newScan.ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                                 newScan.Sent = null;
                                 try {
                                     newScan.Longitude = currentLocation.Longitude;
@@ -379,20 +379,20 @@ namespace DespatchBayExpress
                         var result = streamReader.ReadToEnd();
 
                         Log.Info("TAG-INTENT", "INTENT - " + result);
-                      //  if (result == "ok")
+                       if (result == "\"Event type not found in event data\"")
                         {
                             parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
                         }
                     }
                     httpResponse.Close();
                     Log.Info("TAG-INTENT", "INTENT - Response Closes");
+                    GLOBAL_RECYCLEVIEW_REFRESHED = true;
                 }
                 catch (Exception ex){
                     Log.Info("TAG-INTENT", "INTENT - Response Failed");
                     Log.Info("TAG-INTENT", ex.Message);
                 }
-                Log.Info("TAG-INTENT", "INTENT work complete");
-                GLOBAL_RECYCLEVIEW_REFRESHED = true;
+                Log.Info("TAG-INTENT", "INTENT work complete"); 
             }
         }
         /*
@@ -454,7 +454,7 @@ namespace DespatchBayExpress
             if (currentLocation == null)
             {
                 TrackingScan.SetBackgroundColor(Android.Graphics.Color.LightPink);
-                coordinates.Text = "No GPS fix yet";
+                coordinates.Text = "No GPS fix yet ";
                 //Error Message  
             }
             else

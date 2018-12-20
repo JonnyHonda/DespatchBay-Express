@@ -24,7 +24,7 @@ namespace DespatchBayExpress
         static bool GLOBAL_INTENT_COMPLETE = false;
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            RequestedOrientation = ScreenOrientation.Landscape;
+            RequestedOrientation = ScreenOrientation.Portrait;
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
             base.OnCreate(savedInstanceState);
@@ -36,16 +36,19 @@ namespace DespatchBayExpress
             // Load up any stored applicationPreferences
             EditText submitDataUrl = FindViewById<EditText>(Resource.Id.edit_submit_data_url);
             submitDataUrl.Text = applicationPreferences.getAccessKey("submitDataUrl");
+            submitDataUrl.Text = submitDataUrl.Text.TrimEnd('\r', '\n');
 
             EditText loadConfigUrl = FindViewById<EditText>(Resource.Id.edit_load_config_url);
             loadConfigUrl.Text = applicationPreferences.getAccessKey("loadConfigUrl");
+            loadConfigUrl.Text = loadConfigUrl.Text.TrimEnd('\r', '\n');
 
             EditText applicationKey = FindViewById<EditText>(Resource.Id.edit_application_key);
             applicationKey.Text = applicationPreferences.getAccessKey("applicationKey");
+            applicationKey.Text = applicationKey.Text.TrimEnd('\r', '\n');
 
             Button FetchSettingsButton = FindViewById<Button>(Resource.Id.btn_settings);
 
-            FetchSettingsButton.Click += delegate {
+                FetchSettingsButton.Click += delegate {
                 // This service runs off the man thread
                 GLOBAL_INTENT_COMPLETE = false;
                 // Save some application preferences
