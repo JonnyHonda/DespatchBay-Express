@@ -36,13 +36,13 @@ namespace DespatchBayExpress
     {
         static readonly int REQUEST_LOCATION = 1;
         // static readonly Keycode SCAN_BUTTON = (Keycode)301;
-        SQLiteConnection db = null;
+        SQLiteConnection databaseConnection = null;
 
-        TextView coords;
+        TextView coordinates;
         Location currentLocation;
         LocationManager locationManager;
         string locationProvider;
-        string dbPath;
+        string databasePath;
 
         MediaPlayer mediaPlayer;
         
@@ -58,42 +58,44 @@ namespace DespatchBayExpress
         {
             RequestedOrientation = ScreenOrientation.Portrait;
             Context mContext = Application.Context;
-            AppPreferences ap = new AppPreferences(mContext);
-            if (string.IsNullOrEmpty(ap.getAccessKey("httpEndPoint")))
-
+            AppPreferences applicationPreferences = new AppPreferences(mContext);
+            // Check application Preferences have been saved previously
+            if (
+                string.IsNullOrEmpty(applicationPreferences.getAccessKey("submitDataUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.getAccessKey("loadConfigUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.getAccessKey("applicationKey"))
+                )
             {
+                // No, well start the setting activity
                 StartActivity(typeof(SettingsActivity));
             }
             base.OnCreate(savedInstanceState);
-            dbPath = System.IO.Path.Combine(
+            databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
-            db = new SQLiteConnection(dbPath);
+            databaseConnection = new SQLiteConnection(databasePath);
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
             {
                 
                 // Create the ParcelScans table
-                db.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
-                //db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
+                databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
 
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
 
-                ///
-                System.Timers.Timer Timer1 = new System.Timers.Timer();
-                Timer1.Start();
-                Timer1.Interval = 3000;
-                Timer1.Enabled = true;
-                Timer1.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+                /// This Time waits for the flag GLOBAL_RECYCLEVIEW_REFRESHED to become true
+                System.Timers.Timer threadTimer = new System.Timers.Timer();
+                threadTimer.Start();
+                threadTimer.Interval = 2000;
+                threadTimer.Enabled = true;
+                threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
                 {
                     RunOnUiThread(() =>
                     {
                         if (GLOBAL_RECYCLEVIEW_REFRESHED) { 
-                        //  SetContentView(Resource.Layout.activity_main);
                            GLOBAL_RECYCLEVIEW_REFRESHED = false;
                             Toast.MakeText(Application.Context, "Upload Complete", ToastLength.Long).Show();
                             this.Recreate();
                          }
-
                     });
                 };
 
@@ -113,7 +115,7 @@ namespace DespatchBayExpress
                 Log.Debug("GPS", "We have permission, go ahead and use the GPS.");
                 InitializeLocationManager();
                 
-                coords = FindViewById<TextView>(Resource.Id.footer_text);
+                coordinates = FindViewById<TextView>(Resource.Id.footer_text);
                 Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
                 SetSupportActionBar(toolbar);
                
@@ -129,7 +131,7 @@ namespace DespatchBayExpress
                         {
                             /// need to regex the scan against the Tracking Patterns
                             /// 
-                            TableQuery<TrackingNumberPatterns> trackingPatterns = db.Table<TrackingNumberPatterns>();
+                            TableQuery<TrackingNumberPatterns> trackingPatterns = databaseConnection.Table<TrackingNumberPatterns>();
                             
                             bool patternFound = false;
                             try
@@ -165,7 +167,7 @@ namespace DespatchBayExpress
                                 }
                                 try
                                 {
-                                    db.Insert(newScan);
+                                    databaseConnection.Insert(newScan);
                                     mBarcodeScannerList.FetchBarcodeList();
                                     mAdapter.NotifyDataSetChanged();
                                     mRecyclerView.RefreshDrawableState();
@@ -203,7 +205,7 @@ namespace DespatchBayExpress
                     Snackbar.Make(rootView,
                                    Resource.String.permission_location_rationale,
                                    Snackbar.LengthIndefinite)
-                            .SetAction(Resource.String.ok,
+                            .SetAction("OK",
                                        new Action<View>(delegate (View obj)
                                        {
                                            ActivityCompat.RequestPermissions(this, requiredPermissions, REQUEST_LOCATION);
@@ -255,8 +257,10 @@ namespace DespatchBayExpress
                     Toast.MakeText(this, "Bare with...", ToastLength.Short).Show();
                     Context mContext = Application.Context;
                     AppPreferences ap = new AppPreferences(mContext);
-                    string httpEndPoint = ap.getAccessKey("httpEndPoint");
- 
+                    string httpEndPoint = ap.getAccessKey("submitDataUrl");
+                    string loadConfigUrl = ap.getAccessKey("loadConfigUrl");
+                    string applicationKey = ap.getAccessKey("applicationKey");
+
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
                     Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
@@ -264,7 +268,7 @@ namespace DespatchBayExpress
                     // Pass some vars to the Intent
                     submitDataIntent.PutExtra("httpEndPoint", httpEndPoint);
                     submitDataIntent.PutExtra("userAgent", "Man-In-VAN Handheld Device");
-                    submitDataIntent.PutExtra("token", "NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf");
+                    submitDataIntent.PutExtra("token", applicationKey);
                     try
                     {
                         submitDataIntent.PutExtra("lontitude", currentLocation.Longitude);
@@ -275,12 +279,12 @@ namespace DespatchBayExpress
                         submitDataIntent.PutExtra("lontitude", "");
                         submitDataIntent.PutExtra("latitude", "");
                     }
-                    submitDataIntent.PutExtra("dbPath", dbPath);
+                    submitDataIntent.PutExtra("databasePath", databasePath);
 
                     StartService(submitDataIntent);
                     break;
                 case Resource.Id.menu_sqldatadelete:
-                    db.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
+                    databaseConnection.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
                     // Ugly and brutal way to redraw current view
                     this.Recreate();
                     break;
@@ -305,63 +309,62 @@ namespace DespatchBayExpress
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
                 Log.Info("TAG-INTENT", "INTENT - Perform some long running work");
-                var startTime = DateTime.UtcNow;
+                string startTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
                 string lontitude = intent.GetStringExtra("lontitude");
                 string latitude = intent.GetStringExtra("latitude");
                 string userAgent = intent.GetStringExtra("userAgent");
                 string token = intent.GetStringExtra("token");
                
-                string dbPath = intent.GetStringExtra("dbPath");
+                string databasePath = intent.GetStringExtra("databasePath");
                 Log.Info("TAG-INTENT", "INTENT - Connect to Database");
-                SQLiteConnection db = new SQLiteConnection(dbPath);
+                SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
                 // Create a new Collection
-                Collection oCollection = new Collection();
+                Collection collection = new Collection();
                 // Set the Base values
-                Gps oGps = new Gps();
+                Gps collectionLocation = new Gps();
                 try
                 {
-                    oGps.Latitude = Convert.ToDouble(latitude); // currentLocation.Latitude;
-                    oGps.Longitude = Convert.ToDouble(lontitude); // currentLocation.Longitude;
+                    collectionLocation.Latitude = Convert.ToDouble(latitude);
+                    collectionLocation.Longitude = Convert.ToDouble(lontitude);
                 }
                 catch { }
-                oCollection.Gps = oGps;
+                collection.Gps = collectionLocation;
 
-                oCollection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                collection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
                 Log.Info("TAG-INTENT", "INTENT - Collection created");
                 
-                var parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
-                Scan oScan = new Scan();
-                List<Scan> lScans = new List<Scan>();
+                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");              
+                List<Scan> scannedParcelList = new List<Scan>();
+                Scan scannedParcelListElement = new Scan();
                 foreach (var parcel in parcelScans)
                 {
-                    Gps oScanGps = new Gps();
-                    oScan.Timestamp = parcel.ScanTime;
+                    Gps scannedParcelLocation = new Gps();
+                    scannedParcelListElement.Timestamp = parcel.ScanTime;
                     try
                     {
-                        oScanGps.Longitude = (double)parcel.Longitude;
-                        oScanGps.Latitude = (double)parcel.Latitude;
+                        scannedParcelLocation.Longitude = (double)parcel.Longitude;
+                        scannedParcelLocation.Latitude = (double)parcel.Latitude;
                     }
                     catch { }
-                    oScan.Barcode = parcel.TrackingNumber;
-                    oScan.Gps = oScanGps;
-                    lScans.Add(oScan);
+                    scannedParcelListElement.Barcode = parcel.TrackingNumber;
+                    scannedParcelListElement.Gps = scannedParcelLocation;
+                    scannedParcelList.Add(scannedParcelListElement);
                 }
-                oCollection.Scans = lScans;
-                string sJSON;
+                collection.Scans = scannedParcelList;
+                string jsonToUpload;
                 Log.Info("TAG-INTENT", "INTENT - JSON Created");
-                sJSON = oCollection.ToJson();
-                Log.Info("TAG-INTENT", "INTENT - " + sJSON);
+                jsonToUpload = collection.ToJson();
+                Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
                 Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
-                httpWebRequest.UserAgent = userAgent;
-                // `x-api-key` with a value of `NzagzvUR0E1LKbJrZ0pb43S9IQ1YkYCZxTwzWLtf`
+                httpWebRequest.UserAgent += userAgent;
                 httpWebRequest.Headers["x-api-key"] = token;
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                 {
-                    streamWriter.Write(sJSON);
+                    streamWriter.Write(jsonToUpload);
                     streamWriter.Flush();
                     streamWriter.Close();
                 }
@@ -378,7 +381,7 @@ namespace DespatchBayExpress
                         Log.Info("TAG-INTENT", "INTENT - " + result);
                       //  if (result == "ok")
                         {
-                            parcelScans = db.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
+                            parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
                         }
                     }
                     httpResponse.Close();
@@ -451,12 +454,12 @@ namespace DespatchBayExpress
             if (currentLocation == null)
             {
                 TrackingScan.SetBackgroundColor(Android.Graphics.Color.LightPink);
-                coords.Text = "No GPS fix yet";
+                coordinates.Text = "No GPS fix yet";
                 //Error Message  
             }
             else
             {
-                coords.Text = "Lat:" + currentLocation.Latitude.ToString(("#.00000")) + " / Long:" + currentLocation.Longitude.ToString(("#.00000"));
+                coordinates.Text = "Lat:" + currentLocation.Latitude.ToString(("#.00000")) + " / Long:" + currentLocation.Longitude.ToString(("#.00000"));
             }
         }
 

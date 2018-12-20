@@ -10,7 +10,7 @@ namespace DespatchBayExpress
     public class DespatchBayExpressDataBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:ScanSku.ScanSkuDatabase"/> class.
+        /// Initializes a new instance of the <see cref="T:DespatchBayExpress.DespatchBayExpressDataBase"/> class.
         /// </summary>
         public DespatchBayExpressDataBase()
         {
@@ -34,7 +34,7 @@ namespace DespatchBayExpress
             public double? Longitude { get; set; }
             public double? Latitude { get; set; }
 
-            public DateTime? Sent { get; set; }
+            public string Sent { get; set; }
 
             public override string ToString()
             {
@@ -62,8 +62,6 @@ namespace DespatchBayExpress
             }
         }
     }
-
-
 }
 
 

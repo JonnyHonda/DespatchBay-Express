@@ -24,26 +24,38 @@ namespace DespatchBayExpress
         static bool GLOBAL_INTENT_COMPLETE = false;
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            RequestedOrientation = ScreenOrientation.Portrait;
+            RequestedOrientation = ScreenOrientation.Landscape;
             Context mContext = Application.Context;
-            AppPreferences ap = new AppPreferences(mContext);
+            AppPreferences applicationPreferences = new AppPreferences(mContext);
             base.OnCreate(savedInstanceState);
  
             SetContentView(Resource.Layout.activity_settings);
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
 
-            EditText editUrl = FindViewById<EditText>(Resource.Id.editBaseUrl);
-            editUrl.Text = ap.getAccessKey("httpEndPoint");
+            // Load up any stored applicationPreferences
+            EditText submitDataUrl = FindViewById<EditText>(Resource.Id.edit_submit_data_url);
+            submitDataUrl.Text = applicationPreferences.getAccessKey("submitDataUrl");
+
+            EditText loadConfigUrl = FindViewById<EditText>(Resource.Id.edit_load_config_url);
+            loadConfigUrl.Text = applicationPreferences.getAccessKey("loadConfigUrl");
+
+            EditText applicationKey = FindViewById<EditText>(Resource.Id.edit_application_key);
+            applicationKey.Text = applicationPreferences.getAccessKey("applicationKey");
+
             Button FetchSettingsButton = FindViewById<Button>(Resource.Id.btn_settings);
 
             FetchSettingsButton.Click += delegate {
                 // This service runs off the man thread
                 GLOBAL_INTENT_COMPLETE = false;
-                ap.saveAccessKey("httpEndPoint", editUrl.Text, true);
+                // Save some application preferences
+                applicationPreferences.saveAccessKey("submitDataUrl", submitDataUrl.Text, true);
+                applicationPreferences.saveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
+                applicationPreferences.saveAccessKey("applicationKey", applicationKey.Text, true);
+
                 Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
                 Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
-                submitDataIntent.PutExtra("dbPath", "SomeStuff");
+                submitDataIntent.PutExtra("databasePath", "SomeStuff");
                 StartService(submitDataIntent);
             };      
 
@@ -63,16 +75,16 @@ namespace DespatchBayExpress
 
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
-                string JsonTrackingRegexs;
-                string dbPath = System.IO.Path.Combine(
+                string jsonTrackingRegexs;
+                string databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
-                SQLiteConnection db = new SQLiteConnection(dbPath);
+                SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
                 // Delete the current Regex data
                 try
                 {
                     Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
-                    db.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+                    databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
                 }
                 catch { }
                 
@@ -81,14 +93,14 @@ namespace DespatchBayExpress
                 {
                     using (var webClient = new System.Net.WebClient())
                     {
-                        JsonTrackingRegexs = webClient.DownloadString("http://burrin.uk/ParcelRegex.json");
+                        jsonTrackingRegexs = webClient.DownloadString("http://burrin.uk/ParcelRegex.json");
                         Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
                     }
                 }
                 catch
                 {
                     Log.Info("TAG-SETTINGS", "Settings - Use Hardcoded Regexs");
-                    JsonTrackingRegexs = @"[{
+                    jsonTrackingRegexs = @"[{
                                       ""royal-mail"": ""/^([A-Z]{2}[0-9]{9}GB)/gi"",
                                       ""parcelforce-international"": ""/^((EK|CK){2}[0-9]{9}GB)/gi"",
                                       ""parcelforce-domestic"": ""/^(PB[A-Z]{2}[0-9]{10})/gi"",
@@ -99,9 +111,9 @@ namespace DespatchBayExpress
                                       ""dx-secure"": ""/^([1-9]{1}[0-9]{9})/gi""
                                     }]";
                 }
-                db.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+                databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
-                List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(JsonTrackingRegexs);
+                List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
 
                 foreach (Dictionary<string, string> lst in obj)
                 {
@@ -109,16 +121,16 @@ namespace DespatchBayExpress
                     {
                         // @Todo: There is an ecoding bug here, in the DX numbers because /b encodes incorrectly
                         string testText = item.Value;
-                        int startindex = testText.IndexOf('/');
-                        int endindex = testText.LastIndexOf('/');
-                        string outputstring = testText.Substring(startindex + 1, endindex - startindex - 1);
+                        int startIndex = testText.IndexOf('/');
+                        int endIndex = testText.LastIndexOf('/');
+                        string patternString = testText.Substring(startIndex + 1, endIndex - startIndex - 1);
                         var record = new DespatchBayExpressDataBase.TrackingNumberPatterns
                         {
                             Courier = item.Key,
-                            Pattern = outputstring,
+                            Pattern = patternString,
                             IsEnabled = true
                         };
-                        db.Insert(record);
+                        databaseConnection.Insert(record);
                     }
                 }
                 GLOBAL_INTENT_COMPLETE = true;

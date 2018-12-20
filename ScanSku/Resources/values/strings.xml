@@ -5,7 +5,6 @@
   <string name="author_name">John Burrin</string>
   <string name="git_branch">Config-Improvements</string>
   <string name="permission_location_rationale">Enable AccessFineLocation</string>
-  <string name="ok">OK</string>
   <string name="permission_available_location">permission available location</string>
   <string name="permissions_not_granted">permissions not granted</string>
 </resources>

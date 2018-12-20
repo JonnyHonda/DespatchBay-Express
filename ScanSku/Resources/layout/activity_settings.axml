@@ -71,29 +71,70 @@
     android:layout_width="match_parent" 
     android:layout_height="match_parent" 
     android:shrinkColumns="*"  android:stretchColumns="*" android:background="#ffffff"> 
-    <!-- Row 2 with two columns -->
+    <!-- Row 1 with two columns -->
 <TableRow 
         android:layout_height="wrap_content" 
         android:layout_width="fill_parent" 
         android:gravity="center_horizontal"> 
 			<TextView
-				android:id="@+id/textUrl"
-					android:text="Base Url"
+				android:id="@+id/submit_data_url"
+					android:text="Submit data url"
 					android:layout_height="wrap_content"
 					android:textSize="15sp"
 					
 					/>
 				<EditText
-					android:id="@+id/editBaseUrl"
+					android:id="@+id/edit_submit_data_url"
 					android:hint="https://some-base-url.com"
 					android:background="@android:drawable/editbox_background"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:layout_toRightOf="@+id/textUrl"
 					android:textSize="15sp"
 				/>
 </TableRow>
-				    <!-- Row 2 with single column -->
+				<!-- Row 2 with two columns -->
+				<TableRow 
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent" 
+        android:gravity="center_horizontal"> 
+			<TextView
+				android:id="@+id/load_config_url"
+					android:text="Load Config url"
+					android:layout_height="wrap_content"
+					android:textSize="15sp"
+					
+					/>
+				<EditText
+					android:id="@+id/edit_load_config_url"
+					android:hint="https://some-base-url.com"
+					android:background="@android:drawable/editbox_background"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:textSize="15sp"
+				/>
+</TableRow>
+				<!-- Row 3 with two columns -->
+				<TableRow 
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent" 
+        android:gravity="center_horizontal"> 
+			<TextView
+				android:id="@+id/application_key"
+					android:text="Application Key"
+					android:layout_height="wrap_content"
+					android:textSize="15sp"
+					
+					/>
+				<EditText
+					android:id="@+id/edit_application_key"
+					android:hint=""
+					android:background="@android:drawable/editbox_background"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:textSize="15sp"
+				/>
+					</TableRow>
+				    <!-- Row 4 with single column -->
     <TableRow 
         android:layout_height="wrap_content" 
         android:layout_width="fill_parent" 
@@ -102,8 +143,7 @@
      android:id="@+id/btn_settings"
      android:layout_height="50dp"
      android:layout_width="wrap_content"
-						
-						android:background="@android:drawable/btn_default"
+	android:background="@android:drawable/btn_default"
      android:text="Save" />
     </TableRow>
 				<TableRow>
