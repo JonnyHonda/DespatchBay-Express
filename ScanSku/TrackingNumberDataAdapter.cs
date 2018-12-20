@@ -37,7 +37,7 @@ namespace DespatchBayExpress
             TrackingNumberViewHolder vh = holder as TrackingNumberViewHolder;
             try
             {
-                vh.Caption.Text = mBarcodeScannerList[position].Caption;
+                vh.Caption.Text = mBarcodeScannerList[position].GetBarcodeText;
             }
             catch { vh.Caption.Text = "Missing Tracking Number"; }
         }
