@@ -18,7 +18,7 @@ using Android.Util;
 
 namespace DespatchBayExpress
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
+    [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
     public class SettingsActivity : AppCompatActivity
     {
         static bool GLOBAL_INTENT_COMPLETE = false;
