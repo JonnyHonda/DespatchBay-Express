@@ -15,12 +15,19 @@ using SQLite;
 using Android.Content.PM;
 using System.Net;
 using Android.Util;
+using static DespatchBayExpress.DespatchBayExpressDataBase;
+using Android.Support.V7.Widget;
 
 namespace DespatchBayExpress
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
+    [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
     public class SettingsActivity : AppCompatActivity
     {
+        RecyclerView mRecyclerView;
+        RecyclerView.LayoutManager mLayoutManager;
+        RegExDataAdapter mAdapter;
+        RegExList regExList;
+
         static bool GLOBAL_INTENT_COMPLETE = false;
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -46,6 +53,18 @@ namespace DespatchBayExpress
             applicationKey.Text = applicationPreferences.getAccessKey("applicationKey");
             applicationKey.Text = applicationKey.Text.TrimEnd('\r', '\n');
 
+            
+            mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
+
+            // Plug in the linear layout manager:
+            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+            mRecyclerView.SetLayoutManager(mLayoutManager);
+
+            // Plug in my adapter:
+            regExList = new RegExList();
+            mAdapter = new RegExDataAdapter(regExList);
+            mRecyclerView.SetAdapter(mAdapter);
+
             Button FetchSettingsButton = FindViewById<Button>(Resource.Id.btn_settings);
 
                 FetchSettingsButton.Click += delegate {
@@ -60,14 +79,14 @@ namespace DespatchBayExpress
                 Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
                 submitDataIntent.PutExtra("databasePath", "SomeStuff");
                 StartService(submitDataIntent);
-            };      
+            };
 
             
         }
         
         
         /// <summary>
-        /// An Intent service o attempt to load the Regexex from a Production url
+        /// An Intent service to attempt to load the Regexex from a Production url
         /// </summary>
         [Service]
         public class SubmitDataIntentService : IntentService
@@ -89,7 +108,9 @@ namespace DespatchBayExpress
                     Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
                     databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
                 }
-                catch { }
+                catch {
+                    Log.Info("TAG-SETTINGS", "Settings - Unable to delete Exisiting data");
+                }
                 
                 // Attempt to fetch the new data, on fail use a hard coded set
                 try

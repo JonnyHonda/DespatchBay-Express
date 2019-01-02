@@ -27,11 +27,12 @@ using static DespatchBayExpress.DespatchBayExpressDataBase;
 using System.Net;
 using System.IO;
 using System.Net.Http;
+using Android.Views.InputMethods;
 
 namespace DespatchBayExpress
 {
     
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
+    [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, ILocationListener
     {
         static readonly int REQUEST_LOCATION = 1;
@@ -70,6 +71,7 @@ namespace DespatchBayExpress
                 StartActivity(typeof(SettingsActivity));
             }
             base.OnCreate(savedInstanceState);
+
             databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
@@ -120,6 +122,7 @@ namespace DespatchBayExpress
                 SetSupportActionBar(toolbar);
                
                 TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
+
                 TrackingScan.Text = "";
                 TrackingScan.RequestFocus();
 

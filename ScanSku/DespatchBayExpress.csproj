@@ -60,10 +60,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AboutActivity.cs" />
+    <Compile Include="RegEx.cs" />
     <Compile Include="BarcodeScan.cs" />
     <Compile Include="Collection.cs" />
     <Compile Include="Preferences.cs" />
+    <Compile Include="RegExDataAdapter.cs" />
     <Compile Include="TrackingNumberDataAdapter.cs" />
+    <Compile Include="RegExViewHolder.cs" />
     <Compile Include="TrackingNumberViewHolder.cs" />
     <Compile Include="SettingsActivity.cs" />
     <Compile Include="MainActivity.cs" />
@@ -158,6 +161,12 @@
   <ItemGroup>
     <AndroidResource Include="Resources\raw\beep_07.mp3">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\settings_recycler_view_regex_item.axml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+      <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
