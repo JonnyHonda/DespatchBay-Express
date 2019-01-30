@@ -28,6 +28,7 @@ using System.Net;
 using System.IO;
 using System.Net.Http;
 using Android.Views.InputMethods;
+using Newtonsoft.Json;
 
 namespace DespatchBayExpress
 {
@@ -381,12 +382,21 @@ namespace DespatchBayExpress
 
                     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                     {
-                        var result = streamReader.ReadToEnd();
+                        var jsonResult = streamReader.ReadToEnd();
+                        RemoteServiceResult result = new RemoteServiceResult();
+                        result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
+                        Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
 
-                        Log.Info("TAG-INTENT", "INTENT - " + result);
-                       if (result == "\"Event type not found in event data\"")
+                       if (result.Status == "success")
                         {
+                            Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
+
                             parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
+                        }
+                        else
+                        {
+                            Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
+
                         }
                     }
                     httpResponse.Close();
@@ -410,7 +420,7 @@ namespace DespatchBayExpress
         {
             if (requestCode == REQUEST_LOCATION)
             {        
-                // Received permission result for GPS permission.
+                // Received permission jsonResult for GPS permission.
                 Log.Info("GPS", "Received response for Location permission request.");
                 var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
                 // Check if the only required permission has been granted

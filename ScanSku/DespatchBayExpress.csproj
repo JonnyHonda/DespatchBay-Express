@@ -65,6 +65,7 @@
     <Compile Include="Collection.cs" />
     <Compile Include="Preferences.cs" />
     <Compile Include="RegExDataAdapter.cs" />
+    <Compile Include="RemoteServiceResult.cs" />
     <Compile Include="TrackingNumberDataAdapter.cs" />
     <Compile Include="RegExViewHolder.cs" />
     <Compile Include="TrackingNumberViewHolder.cs" />
