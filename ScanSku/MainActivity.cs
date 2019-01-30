@@ -61,6 +61,7 @@ namespace DespatchBayExpress
             RequestedOrientation = ScreenOrientation.Portrait;
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
+            
             // Check application Preferences have been saved previously
             if (
                 string.IsNullOrEmpty(applicationPreferences.getAccessKey("submitDataUrl")) ||
@@ -228,8 +229,8 @@ namespace DespatchBayExpress
 
         /*
          * Menu Creation
-         * 
-         * 
+         *  
+         *  Inflate Menu and assign
          * */
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
@@ -237,7 +238,11 @@ namespace DespatchBayExpress
             return true;
         }
 
-
+        /// <summary>
+        /// Menu options
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
             switch (item.ItemId)
@@ -255,10 +260,12 @@ namespace DespatchBayExpress
                     StartActivity(typeof(SqliteActivity));
                     break;
                 case Resource.Id.menu_exit:
+                    // This should exit the app
                     this.FinishAffinity();
                     break;
                 case Resource.Id.menu_upload:
-                    Toast.MakeText(this, "Bare with...", ToastLength.Short).Show();
+                    // Begin the process of uploading the data
+                    Toast.MakeText(this, "Connecting to remote service", ToastLength.Long).Show();
                     Context mContext = Application.Context;
                     AppPreferences ap = new AppPreferences(mContext);
                     string httpEndPoint = ap.getAccessKey("submitDataUrl");
@@ -285,7 +292,14 @@ namespace DespatchBayExpress
                     }
                     submitDataIntent.PutExtra("databasePath", databasePath);
 
+                    // Actually start the service, 
+                    // this intent service will run on a separate thread allowing the application
+                    // to continue.
                     StartService(submitDataIntent);
+                    // So in theory, a set up scans will be bundeled up and sent to the end point,
+                    // New scans can be made even before the upload had completed.
+                    // These scans will remain in the view after the upload has completed and marked the bundeled
+                    // scans as sent.
                     break;
                 case Resource.Id.menu_sqldatadelete:
                     databaseConnection.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
@@ -312,7 +326,7 @@ namespace DespatchBayExpress
 
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
-                Log.Info("TAG-INTENT", "INTENT - Perform some long running work");
+                Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
                 string startTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
                 string lontitude = intent.GetStringExtra("lontitude");
