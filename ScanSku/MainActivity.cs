@@ -339,11 +339,13 @@ namespace DespatchBayExpress
                 
                 var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");              
                 List<Scan> scannedParcelList = new List<Scan>();
-                Scan scannedParcelListElement = new Scan();
+                
                 foreach (var parcel in parcelScans)
                 {
+                    Scan scannedParcelListElement = new Scan();
                     Gps scannedParcelLocation = new Gps();
                     scannedParcelListElement.Timestamp = parcel.ScanTime;
+                    // Because Locations can be null
                     try
                     {
                         scannedParcelLocation.Longitude = (double)parcel.Longitude;
