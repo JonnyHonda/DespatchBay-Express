@@ -59,6 +59,11 @@ namespace DespatchBayExpress
             // Plug in the linear layout manager:
             mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
             mRecyclerView.SetLayoutManager(mLayoutManager);
+            string databasePath = System.IO.Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
+                "localscandata.db3");
+            SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
+            databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
             // Plug in my adapter:
             regExList = new RegExList();
