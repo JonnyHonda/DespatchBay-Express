@@ -274,7 +274,7 @@ namespace DespatchBayExpress
 
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
-                    Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
+                    Intent submitDataIntent = new Intent(this, typeof(SubmitCollectionDataIntentService));
                     
                     // Pass some vars to the Intent
                     submitDataIntent.PutExtra("httpEndPoint", httpEndPoint);
@@ -282,8 +282,8 @@ namespace DespatchBayExpress
                     submitDataIntent.PutExtra("token", applicationKey);
                     try
                     {
-                        submitDataIntent.PutExtra("lontitude", currentLocation.Longitude);
-                        submitDataIntent.PutExtra("latitude", currentLocation.Latitude);
+                        submitDataIntent.PutExtra("lontitude", currentLocation.Longitude.ToString());
+                        submitDataIntent.PutExtra("latitude", currentLocation.Latitude.ToString());
                     }
                     catch
                     {
@@ -318,9 +318,9 @@ namespace DespatchBayExpress
          * 
          * */
         [Service]
-        public class SubmitDataIntentService : IntentService
+        public class SubmitCollectionDataIntentService : IntentService
         {
-            public SubmitDataIntentService() : base("SubmitDataIntentService")
+            public SubmitCollectionDataIntentService() : base("SubmitCollectionDataIntentService")
             {
             }
 
@@ -329,8 +329,8 @@ namespace DespatchBayExpress
                 Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
                 string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
-                string lontitude = intent.GetStringExtra("lontitude");
-                string latitude = intent.GetStringExtra("latitude");
+                string Xlontitude = intent.GetStringExtra("lontitude");
+                string Xlatitude = intent.GetStringExtra("latitude");
                 string userAgent = intent.GetStringExtra("userAgent");
                 string token = intent.GetStringExtra("token");
                
@@ -343,8 +343,8 @@ namespace DespatchBayExpress
                 Gps collectionLocation = new Gps();
                 try
                 {
-                    collectionLocation.Latitude = Convert.ToDouble(latitude);
-                    collectionLocation.Longitude = Convert.ToDouble(lontitude);
+                    collectionLocation.Latitude = Convert.ToDouble(Xlatitude);
+                    collectionLocation.Longitude = Convert.ToDouble(Xlontitude);
                 }
                 catch { }
                 collection.Gps = collectionLocation;
