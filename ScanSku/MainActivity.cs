@@ -374,81 +374,89 @@ namespace DespatchBayExpress
                     collectionLocation.Longitude = Convert.ToDouble(lontitude);
                 }
                 catch { }
-                collection.Gps = collectionLocation;
-                collection.batchnumber = batchnumber;
-                collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                Log.Info("TAG-INTENT", "INTENT - Collection created");
-                
-                // Need to select all the scans that have not been uploaded and match the current batch
-                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", batchnumber);              
-                List<Scan> scannedParcelList = new List<Scan>();
-                
-                foreach (var parcel in parcelScans)
+
+                // Fetch all the batches that have not been uploaded
+                var batchnumbers = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT Batch FROM ParcelScans WHERE Sent IS null");
+
+                foreach (var batch in batchnumbers)
                 {
-                    Scan scannedParcelListElement = new Scan();
-                    Gps scannedParcelLocation = new Gps();
-                    scannedParcelListElement.Timestamp = parcel.ScanTime;
-                    // Because Locations can be null
+                    collection.Gps = collectionLocation;
+                    collection.batchnumber = batch.Batch;
+                    collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+                    Log.Info("TAG-INTENT", "INTENT - Collection created");
+
+                    // Need to select all the scans that have not been uploaded and match the current batch
+                    var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
+                    List<Scan> scannedParcelList = new List<Scan>();
+
+                    foreach (var parcel in parcelScans)
+                    {
+                        Scan scannedParcelListElement = new Scan();
+                        Gps scannedParcelLocation = new Gps();
+                        scannedParcelListElement.Timestamp = parcel.ScanTime;
+                        // Because Locations can be null
+                        try
+                        {
+                            scannedParcelLocation.Longitude = (double)parcel.Longitude;
+                            scannedParcelLocation.Latitude = (double)parcel.Latitude;
+                        }
+                        catch { }
+                        scannedParcelListElement.Barcode = parcel.TrackingNumber;
+                        scannedParcelListElement.Gps = scannedParcelLocation;
+                        scannedParcelList.Add(scannedParcelListElement);
+                    }
+                    collection.Scans = scannedParcelList;
+                    string jsonToUpload;
+                    Log.Info("TAG-INTENT", "INTENT - JSON Created");
+                    jsonToUpload = collection.ToJson();
+                    Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
+                    Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
+                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
+                    httpWebRequest.ContentType = "application/json";
+                    httpWebRequest.Method = "POST";
+                    httpWebRequest.UserAgent += userAgent;
+                    httpWebRequest.Headers["x-api-key"] = token;
+                    httpWebRequest.Headers["x-batch"] = batchnumber;
+                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                    {
+                        streamWriter.Write(jsonToUpload);
+                        streamWriter.Flush();
+                        streamWriter.Close();
+                    }
+                    Log.Info("TAG-INTENT", "INTENT - Fetch Response");
                     try
                     {
-                        scannedParcelLocation.Longitude = (double)parcel.Longitude;
-                        scannedParcelLocation.Latitude = (double)parcel.Latitude;
+                        HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var jsonResult = streamReader.ReadToEnd();
+                            RemoteServiceResult result = new RemoteServiceResult();
+                            result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
+                            Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
+
+                            if (httpResponse.StatusCode == HttpStatusCode.OK)
+                            {
+                                Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
+
+                                parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, collection.batchnumber);
+                            }
+                            else
+                            {
+                                Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
+
+                            }
+                        }
+                        httpResponse.Close();
+                        Log.Info("TAG-INTENT", "INTENT - Response Closes");
+                        GLOBAL_RECYCLEVIEW_REFRESHED = true;
                     }
-                    catch { }
-                    scannedParcelListElement.Barcode = parcel.TrackingNumber;
-                    scannedParcelListElement.Gps = scannedParcelLocation;
-                    scannedParcelList.Add(scannedParcelListElement);
-                }
-                collection.Scans = scannedParcelList;
-                string jsonToUpload;
-                Log.Info("TAG-INTENT", "INTENT - JSON Created");
-                jsonToUpload = collection.ToJson();
-                Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
-                Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
-                httpWebRequest.ContentType = "application/json";
-                httpWebRequest.Method = "POST";
-                httpWebRequest.UserAgent += userAgent;
-                httpWebRequest.Headers["x-api-key"] = token;
-                httpWebRequest.Headers["x-batch"] = batchnumber;
-                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                {
-                    streamWriter.Write(jsonToUpload);
-                    streamWriter.Flush();
-                    streamWriter.Close();
-                }
-                Log.Info("TAG-INTENT", "INTENT - Fetch Response");
-                try
-                {
-                    HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    catch (Exception ex)
                     {
-                        var jsonResult = streamReader.ReadToEnd();
-                        RemoteServiceResult result = new RemoteServiceResult();
-                        result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
-                        Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
-
-                       if (httpResponse.StatusCode == HttpStatusCode.OK)
-                        {
-                            Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
-
-                            parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, batchnumber);
-                        }
-                        else
-                        {
-                            Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
-
-                        }
+                        Log.Info("TAG-INTENT", "INTENT - Response Failed");
+                        Log.Info("TAG-INTENT", ex.Message);
                     }
-                    httpResponse.Close();
-                    Log.Info("TAG-INTENT", "INTENT - Response Closes");
-                    GLOBAL_RECYCLEVIEW_REFRESHED = true;
-                }
-                catch (Exception ex){
-                    Log.Info("TAG-INTENT", "INTENT - Response Failed");
-                    Log.Info("TAG-INTENT", ex.Message);
                 }
                 Log.Info("TAG-INTENT", "INTENT work complete"); 
             }
