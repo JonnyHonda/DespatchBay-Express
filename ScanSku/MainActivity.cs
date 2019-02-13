@@ -355,8 +355,8 @@ namespace DespatchBayExpress
                 Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
                 string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
-                string Xlontitude = intent.GetStringExtra("lontitude");
-                string Xlatitude = intent.GetStringExtra("latitude");
+                string lontitude = intent.GetStringExtra("lontitude");
+                string latitude = intent.GetStringExtra("latitude");
                 string userAgent = intent.GetStringExtra("userAgent");
                 string token = intent.GetStringExtra("token");
                 string batchnumber = intent.GetStringExtra("batchnumber");
@@ -370,8 +370,8 @@ namespace DespatchBayExpress
                 Gps collectionLocation = new Gps();
                 try
                 {
-                    collectionLocation.Latitude = Convert.ToDouble(Xlatitude);
-                    collectionLocation.Longitude = Convert.ToDouble(Xlontitude);
+                    collectionLocation.Latitude = Convert.ToDouble(latitude);
+                    collectionLocation.Longitude = Convert.ToDouble(lontitude);
                 }
                 catch { }
                 collection.Gps = collectionLocation;
