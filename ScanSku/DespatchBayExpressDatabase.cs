@@ -34,11 +34,12 @@ namespace DespatchBayExpress
             public double? Longitude { get; set; }
             public double? Latitude { get; set; }
 
+            public string Batch { get; set; }
             public string Sent { get; set; }
 
             public override string ToString()
             {
-                return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}, Sent={5}]", ID, TrackingNumber, ScanTime, Longitude, Latitude, Sent);
+                return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}, Batch={5}, Sent={6}]", ID, TrackingNumber, ScanTime, Longitude, Latitude, Batch, Sent);
             }
 
         }

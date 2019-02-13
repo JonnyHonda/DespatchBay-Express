@@ -23,6 +23,9 @@ namespace DespatchBayExpress
         [JsonProperty("gps")]
         public Gps Gps { get; set; }
 
+        [JsonProperty("batchnumber")]
+        public string batchnumber { get; set; }
+
         [JsonProperty("scans")]
         public List<Scan> Scans { get; set; }
     }

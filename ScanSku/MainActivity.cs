@@ -53,7 +53,8 @@ namespace DespatchBayExpress
         TrackingNumberDataAdapter mAdapter;
         BarcodeScannerList mBarcodeScannerList;
         EditText TrackingScan;
-
+        Guid batch;
+        string batchnumber;
         static bool GLOBAL_RECYCLEVIEW_REFRESHED = false;
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -64,16 +65,21 @@ namespace DespatchBayExpress
             
             // Check application Preferences have been saved previously
             if (
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("submitDataUrl")) ||
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("loadConfigUrl")) ||
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("applicationKey"))
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("submitDataUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("loadConfigUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("applicationKey"))
                 )
             {
                 // No, well start the setting activity
                 StartActivity(typeof(SettingsActivity));
             }
             base.OnCreate(savedInstanceState);
+            // We only want to create a batch number here once when the app first starts and not everytime the activity loads
+            if (batch == Guid.Empty)
+            {
+                SetBatchNumber(false);
 
+            }
             databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
@@ -154,10 +160,13 @@ namespace DespatchBayExpress
                             
                             if (patternFound)
                             {
-                                var newScan = new DespatchBayExpressDataBase.ParcelScans();
-                                newScan.TrackingNumber = TrackingScan.Text.ToUpper();
-                                newScan.ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                                newScan.Sent = null;
+                                var newScan = new DespatchBayExpressDataBase.ParcelScans
+                                {
+                                    TrackingNumber = TrackingScan.Text.ToUpper(),
+                                    ScanTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"),
+                                    Batch = batchnumber,
+                                    Sent = null
+                                };
                                 try {
                                     newScan.Longitude = currentLocation.Longitude;
                                 }
@@ -226,6 +235,19 @@ namespace DespatchBayExpress
             }
         }
 
+        private void SetBatchNumber(bool regenerate)
+        {
+            Context mContext = Application.Context;
+            AppPreferences applicationPreferences = new AppPreferences(mContext);
+            if (string.IsNullOrEmpty(applicationPreferences.GetAccessKey("batchnumber")) || regenerate)
+            {
+                batch = Guid.NewGuid();
+                applicationPreferences.SaveAccessKey("batchnumber", batch.ToString());
+            }
+
+            batchnumber = applicationPreferences.GetAccessKey("batchnumber");
+        }
+
 
         /*
          * Menu Creation
@@ -268,10 +290,10 @@ namespace DespatchBayExpress
                     Toast.MakeText(this, "Connecting to remote service", ToastLength.Long).Show();
                     Context mContext = Application.Context;
                     AppPreferences ap = new AppPreferences(mContext);
-                    string httpEndPoint = ap.getAccessKey("submitDataUrl");
-                    string loadConfigUrl = ap.getAccessKey("loadConfigUrl");
-                    string applicationKey = ap.getAccessKey("applicationKey");
-
+                    string httpEndPoint = ap.GetAccessKey("submitDataUrl");
+                    string loadConfigUrl = ap.GetAccessKey("loadConfigUrl");
+                    string applicationKey = ap.GetAccessKey("applicationKey");
+                    
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
                     Intent submitDataIntent = new Intent(this, typeof(SubmitCollectionDataIntentService));
@@ -290,6 +312,7 @@ namespace DespatchBayExpress
                         submitDataIntent.PutExtra("lontitude", "");
                         submitDataIntent.PutExtra("latitude", "");
                     }
+                    submitDataIntent.PutExtra("batchnumber", batchnumber);
                     submitDataIntent.PutExtra("databasePath", databasePath);
 
                     // Actually start the service, 
@@ -300,7 +323,10 @@ namespace DespatchBayExpress
                     // New scans can be made even before the upload had completed.
                     // These scans will remain in the view after the upload has completed and marked the bundeled
                     // scans as sent.
-                    break;
+                    // This could be a problem if the upload fails
+                    // Create a new Batch number;
+                    SetBatchNumber(true);
+            break;
                 case Resource.Id.menu_sqldatadelete:
                     databaseConnection.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
                     // Ugly and brutal way to redraw current view
@@ -333,9 +359,10 @@ namespace DespatchBayExpress
                 string Xlatitude = intent.GetStringExtra("latitude");
                 string userAgent = intent.GetStringExtra("userAgent");
                 string token = intent.GetStringExtra("token");
-               
+                string batchnumber = intent.GetStringExtra("batchnumber");
                 string databasePath = intent.GetStringExtra("databasePath");
                 Log.Info("TAG-INTENT", "INTENT - Connect to Database");
+               
                 SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
                 // Create a new Collection
                 Collection collection = new Collection();
@@ -348,11 +375,12 @@ namespace DespatchBayExpress
                 }
                 catch { }
                 collection.Gps = collectionLocation;
-
-                collection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                collection.batchnumber = batchnumber;
+                collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 Log.Info("TAG-INTENT", "INTENT - Collection created");
                 
-                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");              
+                // Need to select all the scans that have not been uploaded and match the current batch
+                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", batchnumber);              
                 List<Scan> scannedParcelList = new List<Scan>();
                 
                 foreach (var parcel in parcelScans)
@@ -382,6 +410,7 @@ namespace DespatchBayExpress
                 httpWebRequest.Method = "POST";
                 httpWebRequest.UserAgent += userAgent;
                 httpWebRequest.Headers["x-api-key"] = token;
+                httpWebRequest.Headers["x-batch"] = batchnumber;
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                 {
                     streamWriter.Write(jsonToUpload);
@@ -405,7 +434,7 @@ namespace DespatchBayExpress
                         {
                             Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
 
-                            parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null", startTime);
+                            parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, batchnumber);
                         }
                         else
                         {
