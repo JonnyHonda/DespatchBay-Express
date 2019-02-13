@@ -28,7 +28,7 @@ namespace DespatchBayExpress
         /// <param name="preferenceAccessKey">Preference access key.</param>
         /// <param name="value">Value.</param>
         /// <param name="is_mandatory">If set to <c>true</c> is mandatory.</param>
-        public void saveAccessKey(String preferenceAccessKey,string value, bool is_mandatory = false)
+        public void SaveAccessKey(String preferenceAccessKey,string value, bool is_mandatory = false)
         {
             if (string.IsNullOrEmpty(value) && is_mandatory == true)
             {
@@ -48,7 +48,7 @@ namespace DespatchBayExpress
         /// </summary>
         /// <returns>The access key.</returns>
         /// <param name="preferenceAccessKey">Preference access key.</param>
-        public string getAccessKey(String preferenceAccessKey)
+        public string GetAccessKey(String preferenceAccessKey)
         {
             return mSharedPrefs.GetString(preferenceAccessKey, "");
         }
@@ -56,7 +56,7 @@ namespace DespatchBayExpress
         /// <summary>
         /// Clears the prefs.
         /// </summary>
-        public void clearPrefs(){
+        public void ClearPrefs(){
             mPrefsEditor.Clear().Commit(); 
         }
 

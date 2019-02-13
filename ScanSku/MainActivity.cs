@@ -65,9 +65,9 @@ namespace DespatchBayExpress
             
             // Check application Preferences have been saved previously
             if (
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("submitDataUrl")) ||
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("loadConfigUrl")) ||
-                string.IsNullOrEmpty(applicationPreferences.getAccessKey("applicationKey"))
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("submitDataUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("loadConfigUrl")) ||
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("applicationKey"))
                 )
             {
                 // No, well start the setting activity
@@ -239,13 +239,13 @@ namespace DespatchBayExpress
         {
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
-            if (string.IsNullOrEmpty(applicationPreferences.getAccessKey("batchnumber")) || regenerate)
+            if (string.IsNullOrEmpty(applicationPreferences.GetAccessKey("batchnumber")) || regenerate)
             {
                 batch = Guid.NewGuid();
-                applicationPreferences.saveAccessKey("batchnumber", batch.ToString());
+                applicationPreferences.SaveAccessKey("batchnumber", batch.ToString());
             }
 
-            batchnumber = applicationPreferences.getAccessKey("batchnumber");
+            batchnumber = applicationPreferences.GetAccessKey("batchnumber");
         }
 
 
@@ -290,9 +290,9 @@ namespace DespatchBayExpress
                     Toast.MakeText(this, "Connecting to remote service", ToastLength.Long).Show();
                     Context mContext = Application.Context;
                     AppPreferences ap = new AppPreferences(mContext);
-                    string httpEndPoint = ap.getAccessKey("submitDataUrl");
-                    string loadConfigUrl = ap.getAccessKey("loadConfigUrl");
-                    string applicationKey = ap.getAccessKey("applicationKey");
+                    string httpEndPoint = ap.GetAccessKey("submitDataUrl");
+                    string loadConfigUrl = ap.GetAccessKey("loadConfigUrl");
+                    string applicationKey = ap.GetAccessKey("applicationKey");
                     
                     // This code might be called from within an Activity, for example in an event
                     // handler for a button click.
@@ -376,7 +376,7 @@ namespace DespatchBayExpress
                 catch { }
                 collection.Gps = collectionLocation;
                 collection.batchnumber = batchnumber;
-                collection.Timestamp = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 Log.Info("TAG-INTENT", "INTENT - Collection created");
                 
                 // Need to select all the scans that have not been uploaded and match the current batch

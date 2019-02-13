@@ -42,15 +42,15 @@ namespace DespatchBayExpress
 
             // Load up any stored applicationPreferences
             EditText submitDataUrl = FindViewById<EditText>(Resource.Id.edit_submit_data_url);
-            submitDataUrl.Text = applicationPreferences.getAccessKey("submitDataUrl");
+            submitDataUrl.Text = applicationPreferences.GetAccessKey("submitDataUrl");
             submitDataUrl.Text = submitDataUrl.Text.TrimEnd('\r', '\n');
 
             EditText loadConfigUrl = FindViewById<EditText>(Resource.Id.edit_load_config_url);
-            loadConfigUrl.Text = applicationPreferences.getAccessKey("loadConfigUrl");
+            loadConfigUrl.Text = applicationPreferences.GetAccessKey("loadConfigUrl");
             loadConfigUrl.Text = loadConfigUrl.Text.TrimEnd('\r', '\n');
 
             EditText applicationKey = FindViewById<EditText>(Resource.Id.edit_application_key);
-            applicationKey.Text = applicationPreferences.getAccessKey("applicationKey");
+            applicationKey.Text = applicationPreferences.GetAccessKey("applicationKey");
             applicationKey.Text = applicationKey.Text.TrimEnd('\r', '\n');
 
             
@@ -76,9 +76,9 @@ namespace DespatchBayExpress
                 // This service runs off the man thread
                 GLOBAL_INTENT_COMPLETE = false;
                 // Save some application preferences
-                applicationPreferences.saveAccessKey("submitDataUrl", submitDataUrl.Text, true);
-                applicationPreferences.saveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
-                applicationPreferences.saveAccessKey("applicationKey", applicationKey.Text, true);
+                applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
+                applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
+                applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
 
                 Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
                 Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
