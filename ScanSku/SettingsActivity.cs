@@ -91,7 +91,7 @@ namespace DespatchBayExpress
         [Service]
         public class SubmitDataIntentService : IntentService
         {
-            public SubmitDataIntentService() : base("SubmitDataIntentService")
+            public SubmitDataIntentService() : base("SubmitCollectionDataIntentService")
             {
             }
 
