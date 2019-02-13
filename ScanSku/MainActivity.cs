@@ -327,7 +327,7 @@ namespace DespatchBayExpress
             protected override void OnHandleIntent(Android.Content.Intent intent)
             {
                 Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
-                string startTime = DateTime.Now.ToString("yyyy -MM-ddTHH:mm:ss");
+                string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 string httpEndPoint = intent.GetStringExtra("httpEndPoint");
                 string lontitude = intent.GetStringExtra("lontitude");
                 string latitude = intent.GetStringExtra("latitude");
@@ -391,7 +391,7 @@ namespace DespatchBayExpress
                 Log.Info("TAG-INTENT", "INTENT - Fetch Response");
                 try
                 {
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                    HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
 
                     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
@@ -401,7 +401,7 @@ namespace DespatchBayExpress
                         result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
                         Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
 
-                       if (result.Status == "success")
+                       if (httpResponse.StatusCode == HttpStatusCode.OK)
                         {
                             Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
 
