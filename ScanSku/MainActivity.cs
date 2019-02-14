@@ -62,7 +62,6 @@ namespace DespatchBayExpress
             RequestedOrientation = ScreenOrientation.Portrait;
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
-            
             // Check application Preferences have been saved previously
             if (
                 string.IsNullOrEmpty(applicationPreferences.GetAccessKey("submitDataUrl")) ||
@@ -93,6 +92,7 @@ namespace DespatchBayExpress
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
 
                 /// This Time waits for the flag GLOBAL_RECYCLEVIEW_REFRESHED to become true
+                /// I don't like this
                 System.Timers.Timer threadTimer = new System.Timers.Timer();
                 threadTimer.Start();
                 threadTimer.Interval = 2000;
