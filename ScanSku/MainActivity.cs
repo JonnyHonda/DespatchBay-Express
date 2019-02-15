@@ -312,7 +312,7 @@ namespace DespatchBayExpress
                         submitDataIntent.PutExtra("lontitude", "");
                         submitDataIntent.PutExtra("latitude", "");
                     }
-                    submitDataIntent.PutExtra("batchnumber", batchnumber);
+                    //submitDataIntent.PutExtra("batchnumber", batchnumber);
                     submitDataIntent.PutExtra("databasePath", databasePath);
 
                     // Actually start the service, 
@@ -359,7 +359,7 @@ namespace DespatchBayExpress
                 string latitude = intent.GetStringExtra("latitude");
                 string userAgent = intent.GetStringExtra("userAgent");
                 string token = intent.GetStringExtra("token");
-                string batchnumber = intent.GetStringExtra("batchnumber");
+                // string batchnumber = intent.GetStringExtra("batchnumber");
                 string databasePath = intent.GetStringExtra("databasePath");
                 Log.Info("TAG-INTENT", "INTENT - Connect to Database");
                
@@ -416,16 +416,18 @@ namespace DespatchBayExpress
                     httpWebRequest.Method = "POST";
                     httpWebRequest.UserAgent += userAgent;
                     httpWebRequest.Headers["x-db-api-key"] = token;
-                    httpWebRequest.Headers["x-db-batch"] = batchnumber;
-                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                    {
-                        streamWriter.Write(jsonToUpload);
-                        streamWriter.Flush();
-                        streamWriter.Close();
-                    }
-                    Log.Info("TAG-INTENT", "INTENT - Fetch Response");
+                    httpWebRequest.Headers["x-db-batch"] = collection.batchnumber;
+                    
                     try
                     {
+                        using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                        {
+                            streamWriter.Write(jsonToUpload);
+                            streamWriter.Flush();
+                            streamWriter.Close();
+                        }
+                        Log.Info("TAG-INTENT", "INTENT - Fetch Response");
+
                         HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
 
