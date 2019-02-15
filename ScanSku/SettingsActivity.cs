@@ -97,22 +97,36 @@ namespace DespatchBayExpress
 
                         string jsonstring = TrackingScan.Text;
                         Configuration configuration = new Configuration();
-                        configuration = JsonConvert.DeserializeObject<Configuration>(jsonstring);
-                        
-                        foreach(UpdateConfiguration configItem in configuration.UpdateConfiguration)
+                        try
                         {
-                            submitDataUrl.Text = configItem.UploadEndPoint.ToString();
-                            loadConfigUrl.Text = configItem.RegexEndPoint.ToString();
-                            applicationKey.Text = configItem.ApplicationKey.ToString();
+                            configuration = JsonConvert.DeserializeObject<Configuration>(jsonstring);
+                            if (configuration.UpdateConfiguration.Count == 1)
+                            {
+                                foreach (UpdateConfiguration configItem in configuration.UpdateConfiguration)
+                                {
+                                    submitDataUrl.Text = configItem.UploadEndPoint.ToString();
+                                    loadConfigUrl.Text = configItem.RegexEndPoint.ToString();
+                                    applicationKey.Text = configItem.ApplicationKey.ToString();
+                                }
+                                // Save some application preferences
+                                applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
+                                applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
+                                applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
+                                Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
+                                Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
+                                submitDataIntent.PutExtra("httpEndPoint", loadConfigUrl.Text);
+                                StartService(submitDataIntent);
+                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Short).Show();
+
+                            }
                         }
-                        // Save some application preferences
-                        applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
-                        applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
-                        applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
-                        Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
-                        Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
-                        submitDataIntent.PutExtra("httpEndPoint", loadConfigUrl.Text);
-                        StartService(submitDataIntent);
+                        catch
+                        {
+                            // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
+                            Toast.MakeText(this, "Config QR code not recognised", ToastLength.Short).Show();
+
+                        }
+
                     }
                 }
             };
