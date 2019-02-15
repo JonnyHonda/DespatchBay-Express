@@ -2,7 +2,6 @@
 using Android.Content.PM;
 using Android.OS;
 using Android.Widget;
-using DespatchBayExpress;
 using SQLite;
 using static DespatchBayExpress.DespatchBayExpressDataBase;
 
