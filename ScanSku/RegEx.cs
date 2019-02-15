@@ -33,7 +33,7 @@ namespace DespatchBayExpress
     /// </summary>
     public class RegExList
     {
-        static string dbPath = System.IO.Path.Combine(
+        static readonly string dbPath = System.IO.Path.Combine(
                         System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                         "localscandata.db3");
         SQLiteConnection db = new SQLiteConnection(dbPath);

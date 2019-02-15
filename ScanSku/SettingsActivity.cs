@@ -66,23 +66,37 @@ namespace DespatchBayExpress
             applicationKey.Text = applicationPreferences.GetAccessKey("applicationKey");
             applicationKey.Text = applicationKey.Text.TrimEnd('\r', '\n');
 
-            
-            mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
-
-            // Plug in the linear layout manager:
-            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
-            mRecyclerView.SetLayoutManager(mLayoutManager);
             string databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
             SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
             databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
-            // Plug in my adapter:
-            regExList = new RegExList();
-            mAdapter = new RegExDataAdapter(regExList);
-            mRecyclerView.SetAdapter(mAdapter);
+            /// This Timer, checks the the Recycler views datasource every 2 seconds and updates it
+            /// I don't like this
+            System.Timers.Timer threadTimer = new System.Timers.Timer();
+            threadTimer.Start();
+            threadTimer.Interval = 2000;
+            threadTimer.Enabled = true;
+            threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+            {
+                RunOnUiThread(() =>
+                {
+                    // Log.Debug("TAG-TIMER", "Every Two Seconds");
+                    mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
 
+                    // Plug in the linear layout manager:
+                    mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+                    mRecyclerView.SetLayoutManager(mLayoutManager);
+
+
+                    // Plug in my adapter:
+                    regExList = new RegExList();
+                    mAdapter = new RegExDataAdapter(regExList);
+                    mRecyclerView.SetAdapter(mAdapter);
+                });
+            };
+            
             TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
             TrackingScan.Text = "";
@@ -117,10 +131,12 @@ namespace DespatchBayExpress
                                 submitDataIntent.PutExtra("httpEndPoint", loadConfigUrl.Text);
                                 StartService(submitDataIntent);
                                 Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Short).Show();
+                                TrackingScan.Text = "";
+
 
                             }
                         }
-                        catch
+                        catch(Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
                             Toast.MakeText(this, "Config QR code not recognised", ToastLength.Short).Show();
@@ -171,12 +187,14 @@ namespace DespatchBayExpress
                         Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
                     }
                 }
-                catch
+                catch(Exception e)
                 {
                     Log.Info("TAG-SETTINGS", "Settings - Loading regexs failed");
+                    jsonTrackingRegexs = "[{\"Failed\": \"/"+ e.Message +"/\"}]";
                 }
                 databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
+                
                 List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
 
                 foreach (Dictionary<string, string> lst in obj)

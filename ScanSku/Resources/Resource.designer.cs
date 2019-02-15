@@ -3737,8 +3737,14 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f09003f
 			public const int permissions_not_granted = 2131296319;
 			
+			// aapt resource value: 0x7f090041
+			public const int regex_table = 2131296321;
+			
 			// aapt resource value: 0x7f090022
 			public const int search_menu_title = 2131296290;
+			
+			// aapt resource value: 0x7f090040
+			public const int settings_table = 2131296320;
 			
 			// aapt resource value: 0x7f090037
 			public const int status_bar_notification_info_overflow = 2131296311;

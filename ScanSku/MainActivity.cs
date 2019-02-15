@@ -96,7 +96,7 @@ namespace DespatchBayExpress
                 {
                     RunOnUiThread(() =>
                     {
-                        Log.Debug("TAG-TIMER", "Every Two Seconds");
+                       // Log.Debug("TAG-TIMER", "Every Two Seconds");
                         TrackingNumberDataProvider();   
                     });
                 };
@@ -171,7 +171,11 @@ namespace DespatchBayExpress
                                     mRecyclerView.RefreshDrawableState();
                                     mediaPlayer.Start();
                                 }
-                                catch (SQLiteException ex) { Toast.MakeText(this, "Scan Error :" + ex.Message, ToastLength.Short).Show(); }
+                                catch (SQLiteException ex) {
+                                    Toast.MakeText(this, "Scan Error : Duplicated Barcode Scan", ToastLength.Long).Show();
+                                    Log.Info("SCANNER", "Scan Error : " + ex.Message);
+
+                                }
                             }
                             else
                             {
