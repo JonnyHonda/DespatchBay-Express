@@ -53,7 +53,7 @@
 		<TextView
 				android:id="@+id/footer_text"
 				android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
+				android:layout_height="wrap_content"
 				android:text=""
 				android:textColor="#FFFFFF"
 				android:gravity="center"
@@ -83,14 +83,6 @@
 					android:textSize="15sp"
 					
 					/>
-				<EditText
-					android:id="@+id/edit_submit_data_url"
-					android:hint="https://some-base-url.com"
-					android:background="@android:drawable/editbox_background"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:textSize="15sp"
-				/>
 </TableRow>
 				<!-- Row 2 with two columns -->
 				<TableRow 
@@ -104,14 +96,6 @@
 					android:textSize="15sp"
 					
 					/>
-				<EditText
-					android:id="@+id/edit_load_config_url"
-					android:hint="https://some-base-url.com"
-					android:background="@android:drawable/editbox_background"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:textSize="15sp"
-				/>
 </TableRow>
 				<!-- Row 3 with two columns -->
 				<TableRow 
@@ -125,27 +109,20 @@
 					android:textSize="15sp"
 					
 					/>
-				<EditText
-					android:id="@+id/edit_application_key"
-					android:hint=""
-					android:background="@android:drawable/editbox_background"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:textSize="15sp"
-				/>
 					</TableRow>
 				    <!-- Row 4 with single column -->
-    <TableRow 
-        android:layout_height="wrap_content" 
-        android:layout_width="fill_parent" 
-        android:gravity="center_horizontal">  
-<Button
-     android:id="@+id/btn_settings"
-     android:layout_height="50dp"
-     android:layout_width="wrap_content"
-	android:background="@android:drawable/btn_default"
-     android:text="Save" />
-    </TableRow>
+				<TableRow
+					android:layout_height="wrap_content"
+					android:layout_width="fill_parent"
+					android:gravity="center_horizontal"
+					android:minWidth="25px"
+					android:minHeight="25px">
+					<TextView
+						android:minWidth="30px"
+						android:minHeight="30px"
+						xmlns="http://schemas.android.com/apk/res/android"
+						android:id="@+id/textView1" />
+				</TableRow>
 				<TableRow>
 				<TextView 
             android:id="@+id/TextView04" android:text="Current Settings"
@@ -166,5 +143,15 @@
 			</TableLayout>
 
 	</ScrollView>
+		
 </RelativeLayout>  
+	<EditText
+				android:textAppearance="?android:attr/textAppearanceMedium"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:lines="1"
+				android:maxLines="1"
+				android:singleLine="true"
+				android:background="@android:drawable/editbox_background"
+				android:id="@+id/txtentry" />
 	</android.support.design.widget.CoordinatorLayout>

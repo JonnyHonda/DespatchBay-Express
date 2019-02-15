@@ -9,7 +9,7 @@
   <item android:id="@+id/menu_sqldatadelete" android:title="Delete Scan Data" showAsAction="ifRoom" />
 
   <!--///showAsAction="always" ///-->
-  <item android:id="@+id/menu_settings" android:title="Load Configuration" showAsAction="always" />
+  <item android:id="@+id/menu_settings" android:title="Show Configuration" showAsAction="always" />
   <item android:id="@+id/menu_about" android:title="About" showAsAction="always" />
   <item android:id="@+id/menu_exit" android:title="Exit" showAsAction="always" />
 </menu>
