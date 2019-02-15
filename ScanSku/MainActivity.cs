@@ -376,7 +376,7 @@ namespace DespatchBayExpress
                 catch { }
 
                 // Fetch all the batches that have not been uploaded
-                var batchnumbers = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT Batch FROM ParcelScans WHERE Sent IS null");
+                var batchnumbers = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT Batch FROM ParcelScans WHERE Sent IS null GROUP BY Batch");
 
                 foreach (var batch in batchnumbers)
                 {
@@ -415,8 +415,8 @@ namespace DespatchBayExpress
                     httpWebRequest.ContentType = "application/json";
                     httpWebRequest.Method = "POST";
                     httpWebRequest.UserAgent += userAgent;
-                    httpWebRequest.Headers["x-api-key"] = token;
-                    httpWebRequest.Headers["x-batch"] = batchnumber;
+                    httpWebRequest.Headers["x-db-api-key"] = token;
+                    httpWebRequest.Headers["x-db-batch"] = batchnumber;
                     using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                     {
                         streamWriter.Write(jsonToUpload);
@@ -461,6 +461,7 @@ namespace DespatchBayExpress
                 Log.Info("TAG-INTENT", "INTENT work complete"); 
             }
         }
+
         /*
          * From here on these functions releate to GPS and GPS permissions
          * 

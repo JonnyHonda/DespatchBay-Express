@@ -15,7 +15,7 @@ namespace DespatchBayExpress
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
 
-    public partial class Collection
+           public partial class Collection
     {
         [JsonProperty("timestamp")]
         public string Timestamp { get; set; }
@@ -23,7 +23,7 @@ namespace DespatchBayExpress
         [JsonProperty("gps")]
         public Gps Gps { get; set; }
 
-        [JsonProperty("batchnumber")]
+        [JsonProperty("batch")]
         public string batchnumber { get; set; }
 
         [JsonProperty("scans")]
