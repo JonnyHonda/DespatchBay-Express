@@ -55,14 +55,13 @@ namespace DespatchBayExpress
         EditText TrackingScan;
         Guid batch;
         string batchnumber;
-        static bool GLOBAL_RECYCLEVIEW_REFRESHED = false;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             RequestedOrientation = ScreenOrientation.Portrait;
-            Context mContext = Application.Context;
-            AppPreferences applicationPreferences = new AppPreferences(mContext);
-            // Check application Preferences have been saved previously
+            Context applicationContext = Application.Context;
+            AppPreferences applicationPreferences = new AppPreferences(applicationContext);
+            // Check application Preferences have been saved previously if not open Settings Activity and wait there.
             if (
                 string.IsNullOrEmpty(applicationPreferences.GetAccessKey("submitDataUrl")) ||
                 string.IsNullOrEmpty(applicationPreferences.GetAccessKey("loadConfigUrl")) ||
@@ -85,50 +84,36 @@ namespace DespatchBayExpress
             databaseConnection = new SQLiteConnection(databasePath);
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
             {
-                
+                SetContentView(Resource.Layout.activity_main);
+
                 // Create the ParcelScans table
                 databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
 
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
 
-                /// This Time waits for the flag GLOBAL_RECYCLEVIEW_REFRESHED to become true
+                /// This Timer, checks the the Recycler views datasource every 5 secods and updates it
                 /// I don't like this
                 System.Timers.Timer threadTimer = new System.Timers.Timer();
                 threadTimer.Start();
-                threadTimer.Interval = 2000;
+                threadTimer.Interval = 5000;
                 threadTimer.Enabled = true;
                 threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
                 {
                     RunOnUiThread(() =>
                     {
-                        if (GLOBAL_RECYCLEVIEW_REFRESHED) { 
-                           GLOBAL_RECYCLEVIEW_REFRESHED = false;
-                            Toast.MakeText(Application.Context, "Upload Complete", ToastLength.Long).Show();
-                            this.Recreate();
-                         }
+                        Log.Debug("TAG-TIMER", "Every Two Seconds");
+                        TrackingNumberDataProvider();   
                     });
                 };
-
-                mBarcodeScannerList = new BarcodeScannerList();
-                SetContentView(Resource.Layout.activity_main);
-                
-                mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
-
-                // Plug in the linear layout manager:
-                mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical,false);
-                mRecyclerView.SetLayoutManager(mLayoutManager);
-                
-                // Plug in my adapter:
-                mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
-                mRecyclerView.SetAdapter(mAdapter);
+             
                 // We have permission, go ahead and use the GPS.
                 Log.Debug("GPS", "We have permission, go ahead and use the GPS.");
                 InitializeLocationManager();
-                
+
                 coordinates = FindViewById<TextView>(Resource.Id.footer_text);
                 Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
                 SetSupportActionBar(toolbar);
-               
+
                 TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
                 TrackingScan.Text = "";
@@ -143,7 +128,7 @@ namespace DespatchBayExpress
                             /// need to regex the scan against the Tracking Patterns
                             /// 
                             TableQuery<TrackingNumberPatterns> trackingPatterns = databaseConnection.Table<TrackingNumberPatterns>();
-                            
+
                             bool patternFound = false;
                             try
                             {
@@ -157,7 +142,7 @@ namespace DespatchBayExpress
                                 }
                             }
                             catch { }
-                            
+
                             if (patternFound)
                             {
                                 var newScan = new DespatchBayExpressDataBase.ParcelScans
@@ -167,16 +152,20 @@ namespace DespatchBayExpress
                                     Batch = batchnumber,
                                     Sent = null
                                 };
-                                try {
+                                try
+                                {
                                     newScan.Longitude = currentLocation.Longitude;
                                 }
-                                catch {
+                                catch
+                                {
                                     newScan.Longitude = null;
                                 }
-                                try {
+                                try
+                                {
                                     newScan.Latitude = currentLocation.Latitude;
                                 }
-                                catch {
+                                catch
+                                {
                                     newScan.Latitude = null;
                                 }
                                 try
@@ -193,13 +182,13 @@ namespace DespatchBayExpress
                             {
                                 Toast.MakeText(this, "Barcode format not recognised", ToastLength.Short).Show();
                             }
-                            
+
                             TrackingScan.RequestFocus();
                             TrackingScan.Text = "";
                         }
                     }
                 };
-                
+
             }
             else
             {
@@ -233,6 +222,22 @@ namespace DespatchBayExpress
                 }
 
             }
+        }
+
+        /// <summary>
+        /// Provides the data adapter for the RecyclerView
+        /// This simple gets all the current tracking numbers and populates the recycler
+        /// </summary>
+        private void TrackingNumberDataProvider()
+        {
+            mBarcodeScannerList = new BarcodeScannerList();
+            mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
+            // Plug in the linear layout manager:
+            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+            mRecyclerView.SetLayoutManager(mLayoutManager);
+            // Plug in my adapter:
+            mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
+            mRecyclerView.SetAdapter(mAdapter);
         }
 
         private void SetBatchNumber(bool regenerate)
@@ -452,7 +457,6 @@ namespace DespatchBayExpress
                         }
                         httpResponse.Close();
                         Log.Info("TAG-INTENT", "INTENT - Response Closes");
-                        GLOBAL_RECYCLEVIEW_REFRESHED = true;
                     }
                     catch (Exception ex)
                     {
