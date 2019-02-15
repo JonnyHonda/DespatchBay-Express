@@ -36,7 +36,7 @@
 				android:id="@+id/header_text"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="Settings"
+				android:text="@string/settings_table"
 				android:textColor="#FFFFFF"
 				android:textSize="25sp"
 			
@@ -125,7 +125,7 @@
 				</TableRow>
 				<TableRow>
 				<TextView 
-            android:id="@+id/TextView04" android:text="Current Settings"
+            android:id="@+id/TextView04" android:text="@string/regex_table"
             android:layout_weight="1" android:background="#689F38"
             android:textColor="#FFF"
 						android:textStyle="bold"

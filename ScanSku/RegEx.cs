@@ -1,14 +1,5 @@
-﻿using System;
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using Android.OS;
-using Android.Support.V7.Widget;
+﻿using SQLite;
 using System.Collections.Generic;
-using SQLite;
-using static DespatchBayExpress.DespatchBayExpressDataBase;
 
 namespace DespatchBayExpress
 {
@@ -42,7 +33,7 @@ namespace DespatchBayExpress
     /// </summary>
     public class RegExList
     {
-        static string dbPath = System.IO.Path.Combine(
+        static readonly string dbPath = System.IO.Path.Combine(
                         System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                         "localscandata.db3");
         SQLiteConnection db = new SQLiteConnection(dbPath);

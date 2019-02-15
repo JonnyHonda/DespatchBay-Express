@@ -5,21 +5,23 @@ using Android.Preferences;
 namespace DespatchBayExpress
 {
     /// <summary>
-    /// App preferences.
+    /// App preferences. This call allows the application to save prefernces with the applications context rather than in a database,
+    /// These prefs are lost when the application is uninstalled
+    /// These preferences are key/value pairs and can be retrieved from anywhere within the application
     /// </summary>
     public class AppPreferences
     {
-        private ISharedPreferences mSharedPrefs;
-        private ISharedPreferencesEditor mPrefsEditor;
-        private Context mContext;
+        private ISharedPreferences sharedPreferences;
+        private ISharedPreferencesEditor preferencesEditor;
+        private readonly Context applicationContext;
 
         //private static String PREFERENCE_ACCESS_KEY = "PREFERENCE_ACCESS_KEY";
 
         public AppPreferences(Context context)
         {
-            this.mContext = context;
-            mSharedPrefs = PreferenceManager.GetDefaultSharedPreferences(mContext);
-            mPrefsEditor = mSharedPrefs.Edit();
+            this.applicationContext = context;
+            sharedPreferences = PreferenceManager.GetDefaultSharedPreferences(applicationContext);
+            preferencesEditor = sharedPreferences.Edit();
         }
 
         /// <summary>
@@ -36,8 +38,8 @@ namespace DespatchBayExpress
             }
             else
             {
-                mPrefsEditor.PutString(preferenceAccessKey, value);
-                mPrefsEditor.Commit();
+                preferencesEditor.PutString(preferenceAccessKey, value);
+                preferencesEditor.Commit();
 
             }
 
@@ -50,14 +52,14 @@ namespace DespatchBayExpress
         /// <param name="preferenceAccessKey">Preference access key.</param>
         public string GetAccessKey(String preferenceAccessKey)
         {
-            return mSharedPrefs.GetString(preferenceAccessKey, "");
+            return sharedPreferences.GetString(preferenceAccessKey, "");
         }
 
         /// <summary>
         /// Clears the prefs.
         /// </summary>
         public void ClearPrefs(){
-            mPrefsEditor.Clear().Commit(); 
+            preferencesEditor.Clear().Commit(); 
         }
 
     }

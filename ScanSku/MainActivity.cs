@@ -1,38 +1,33 @@
-﻿using System;
+﻿using Android;
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
+using Android.Locations;
+using Android.Media;
 using Android.OS;
 using Android.Runtime;
 using Android.Support.Design.Widget;
+using Android.Support.V4.App;
+using Android.Support.V4.Content;
 using Android.Support.V7.App;
+using Android.Support.V7.Widget;
+using Android.Util;
 using Android.Views;
 using Android.Widget;
+using Newtonsoft.Json;
 using SQLite;
-using Android.Locations;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Android.Util;
-using System.Security;
-using Android.Support.V4.Content;
-using static Android.Manifest;
-using Android;
-using Android.Content.PM;
-using Permission = Android.Content.PM.Permission;
-using Android.Support.V4.App;
-using Android.Support.V7.Widget;
-using System.Collections;
-using Android.Media;
+using System.Net;
 using System.Text.RegularExpressions;
 using static DespatchBayExpress.DespatchBayExpressDataBase;
-using System.Net;
-using System.IO;
-using System.Net.Http;
-using Android.Views.InputMethods;
-using Newtonsoft.Json;
+using Permission = Android.Content.PM.Permission;
 
 namespace DespatchBayExpress
 {
-    
+
     [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, ILocationListener
     {
@@ -91,17 +86,17 @@ namespace DespatchBayExpress
 
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
 
-                /// This Timer, checks the the Recycler views datasource every 5 secods and updates it
+                /// This Timer, checks the the Recycler views datasource every 2 seconds and updates it
                 /// I don't like this
                 System.Timers.Timer threadTimer = new System.Timers.Timer();
                 threadTimer.Start();
-                threadTimer.Interval = 5000;
+                threadTimer.Interval = 2000;
                 threadTimer.Enabled = true;
                 threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
                 {
                     RunOnUiThread(() =>
                     {
-                        Log.Debug("TAG-TIMER", "Every Two Seconds");
+                       // Log.Debug("TAG-TIMER", "Every Two Seconds");
                         TrackingNumberDataProvider();   
                     });
                 };
@@ -176,7 +171,11 @@ namespace DespatchBayExpress
                                     mRecyclerView.RefreshDrawableState();
                                     mediaPlayer.Start();
                                 }
-                                catch (SQLiteException ex) { Toast.MakeText(this, "Scan Error :" + ex.Message, ToastLength.Short).Show(); }
+                                catch (SQLiteException ex) {
+                                    Toast.MakeText(this, "Scan Error : Duplicated Barcode Scan", ToastLength.Long).Show();
+                                    Log.Info("SCANNER", "Scan Error : " + ex.Message);
+
+                                }
                             }
                             else
                             {
