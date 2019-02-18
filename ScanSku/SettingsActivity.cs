@@ -139,7 +139,7 @@ namespace DespatchBayExpress
                         catch(Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
-                            Toast.MakeText(this, "Config QR code not recognised", ToastLength.Short).Show();
+                            Toast.MakeText(this, "Config QR code not recognised", ToastLength.Long).Show();
 
                         }
 
