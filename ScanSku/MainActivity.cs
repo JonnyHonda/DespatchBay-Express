@@ -50,6 +50,7 @@ namespace DespatchBayExpress
         EditText TrackingScan;
         Guid batch;
         string batchnumber;
+        static bool GLOBAL_RECYCLEVIEW_REFRESHED = true;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -96,8 +97,12 @@ namespace DespatchBayExpress
                 {
                     RunOnUiThread(() =>
                     {
-                       // Log.Debug("TAG-TIMER", "Every Two Seconds");
-                        TrackingNumberDataProvider();   
+                        if (GLOBAL_RECYCLEVIEW_REFRESHED)
+                        {
+                            GLOBAL_RECYCLEVIEW_REFRESHED = false;
+                            // Log.Debug("TAG-TIMER", "Every Two Seconds");
+                            TrackingNumberDataProvider();
+                        }
                     });
                 };
              
@@ -231,12 +236,17 @@ namespace DespatchBayExpress
         {
             mBarcodeScannerList = new BarcodeScannerList();
             mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
+            ScrollView scrollView = FindViewById<ScrollView>(Resource.Id.scroll_view);
             // Plug in the linear layout manager:
-            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, true);
+            mLayoutManager.ScrollToPosition(0);
             mRecyclerView.SetLayoutManager(mLayoutManager);
+            mRecyclerView.ScrollToPosition(0);
             // Plug in my adapter:
             mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
             mRecyclerView.SetAdapter(mAdapter);
+            mRecyclerView.ScrollToPosition(0);
+            
         }
 
         private void SetBatchNumber(bool regenerate)
@@ -456,6 +466,7 @@ namespace DespatchBayExpress
                         }
                         httpResponse.Close();
                         Log.Info("TAG-INTENT", "INTENT - Response Closes");
+                        GLOBAL_RECYCLEVIEW_REFRESHED = true;
                     }
                     catch (Exception ex)
                     {
