@@ -72,31 +72,7 @@ namespace DespatchBayExpress
             SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
             databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
-            /// This Timer, checks the the Recycler views datasource every 2 seconds and updates it
-            /// I don't like this
-            System.Timers.Timer threadTimer = new System.Timers.Timer();
-            threadTimer.Start();
-            threadTimer.Interval = 2000;
-            threadTimer.Enabled = true;
-            threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-            {
-                RunOnUiThread(() =>
-                {
-                    // Log.Debug("TAG-TIMER", "Every Two Seconds");
-                    mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
-
-                    // Plug in the linear layout manager:
-                    mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
-                    mRecyclerView.SetLayoutManager(mLayoutManager);
-
-
-                    // Plug in my adapter:
-                    regExList = new RegExList();
-                    mAdapter = new RegExDataAdapter(regExList);
-                    mRecyclerView.SetAdapter(mAdapter);
-                });
-            };
-            
+            PopulateRecycleView();
             TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
             TrackingScan.Text = "";
@@ -128,23 +104,38 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
                                 Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
+                                taskA.Wait();
                                 Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
-                                TrackingScan.Text = "";
+                                
                             }
                         }
                         catch(Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
                             Toast.MakeText(this, "Config QR code not recognised", ToastLength.Long).Show();
-                            TrackingScan.Text = "";
                         }
-
+                        PopulateRecycleView();
+                        TrackingScan.Text = "";
                     }
                 }
             };
 
     }
 
+        private void PopulateRecycleView()
+        {
+            mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
+
+            // Plug in the linear layout manager:
+            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+            mRecyclerView.SetLayoutManager(mLayoutManager);
+
+
+            // Plug in my adapter:
+            regExList = new RegExList();
+            mAdapter = new RegExDataAdapter(regExList);
+            mRecyclerView.SetAdapter(mAdapter);
+        }
 
         private void FetchTrackingRegExData(string httpRegExPatternEndPoint)
         {
@@ -203,6 +194,7 @@ namespace DespatchBayExpress
                     databaseConnection.Insert(record);
                 }
             }
+            
             Log.Info("TAG-SETTINGS", "Settings - Intent Complete");
         }
 
