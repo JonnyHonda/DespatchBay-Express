@@ -14,24 +14,6 @@ using System.Collections.Generic;
 
 namespace DespatchBayExpress
 {
-    public partial class Configuration
-    {
-        [JsonProperty("UpdateConfiguration")]
-        public List<UpdateConfiguration> UpdateConfiguration { get; set; }
-    }
-
-    public partial class UpdateConfiguration
-    {
-        [JsonProperty("UploadEndPoint")]
-        public Uri UploadEndPoint { get; set; }
-
-        [JsonProperty("RegexEndPoint")]
-        public Uri RegexEndPoint { get; set; }
-
-        [JsonProperty("ApplicationKey")]
-        public Guid ApplicationKey { get; set; }
-    }
-
     [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
     public class SettingsActivity : AppCompatActivity
     {
@@ -48,7 +30,7 @@ namespace DespatchBayExpress
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
             base.OnCreate(savedInstanceState);
- 
+
             SetContentView(Resource.Layout.activity_settings);
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
@@ -72,31 +54,7 @@ namespace DespatchBayExpress
             SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
             databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
 
-            /// This Timer, checks the the Recycler views datasource every 2 seconds and updates it
-            /// I don't like this
-            System.Timers.Timer threadTimer = new System.Timers.Timer();
-            threadTimer.Start();
-            threadTimer.Interval = 2000;
-            threadTimer.Enabled = true;
-            threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-            {
-                RunOnUiThread(() =>
-                {
-                    // Log.Debug("TAG-TIMER", "Every Two Seconds");
-                    mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
-
-                    // Plug in the linear layout manager:
-                    mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
-                    mRecyclerView.SetLayoutManager(mLayoutManager);
-
-
-                    // Plug in my adapter:
-                    regExList = new RegExList();
-                    mAdapter = new RegExDataAdapter(regExList);
-                    mRecyclerView.SetAdapter(mAdapter);
-                });
-            };
-            
+            PopulateRecycleView();
             TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
             TrackingScan.Text = "";
@@ -126,100 +84,103 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
-                                Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
-                                Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
-                                submitDataIntent.PutExtra("httpEndPoint", loadConfigUrl.Text);
-                                StartService(submitDataIntent);
-                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Short).Show();
-                                TrackingScan.Text = "";
-
+                                Log.Info("TAG-SETTINGS", "Settings - Call FetchTrackingRegExData");
+                                System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
+                                taskA.Wait();
+                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
 
                             }
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
                             Toast.MakeText(this, "Config QR code not recognised", ToastLength.Long).Show();
-
                         }
-
+                        PopulateRecycleView();
+                        TrackingScan.Text = "";
                     }
                 }
             };
 
-    }
-        
-        /// <summary>
-        /// An Intent service to attempt to load the Regexex from a Production url
-        /// </summary>
-        [Service]
-        public class SubmitDataIntentService : IntentService
-        {
-            public SubmitDataIntentService() : base("SubmitCollectionDataIntentService")
-            {
-            }
-
-            protected override void OnHandleIntent(Android.Content.Intent intent)
-            {
-                string jsonTrackingRegexs = null;
-                string httpRegExPatternEndPoint = intent.GetStringExtra("httpEndPoint");
-
-                string databasePath = System.IO.Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
-                "localscandata.db3");
-                SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
-                // Delete the current Regex data
-                try
-                {
-                    Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
-                    databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
-                }
-                catch {
-                    Log.Info("TAG-SETTINGS", "Settings - Unable to delete Exisiting data");
-                }
-
-                // Attempt to fetch the new data, on fail use a hard coded set
-                try
-                {
-                    using (var webClient = new System.Net.WebClient())
-                    {
-                        jsonTrackingRegexs = webClient.DownloadString(httpRegExPatternEndPoint);
-                        Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
-                    }
-                }
-                catch(Exception e)
-                {
-                    Log.Info("TAG-SETTINGS", "Settings - Loading regexs failed");
-                    jsonTrackingRegexs = "[{\"Failed\": \"/"+ e.Message +"/\"}]";
-                }
-                databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
-
-                
-                List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
-
-                foreach (Dictionary<string, string> lst in obj)
-                {
-                    foreach (KeyValuePair<string, string> item in lst)
-                    {
-                        // @Todo: There is an ecoding bug here, in the DX numbers because /b encodes incorrectly
-                        string testText = item.Value;
-                        int startIndex = testText.IndexOf('/');
-                        int endIndex = testText.LastIndexOf('/');
-                        string patternString = testText.Substring(startIndex + 1, endIndex - startIndex - 1);
-                        var record = new DespatchBayExpressDataBase.TrackingNumberPatterns
-                        {
-                            Courier = item.Key,
-                            Pattern = patternString,
-                            IsEnabled = true
-                        };
-                        databaseConnection.Insert(record);
-                    }
-                }
-                   Log.Info("TAG-SETTINGS", "Settings - Intent Complete");
-            }
         }
 
-    public override bool OnCreateOptionsMenu(IMenu menu)
+        private void PopulateRecycleView()
+        {
+            mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
+
+            // Plug in the linear layout manager:
+            mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.Vertical, false);
+            mRecyclerView.SetLayoutManager(mLayoutManager);
+
+
+            // Plug in my adapter:
+            regExList = new RegExList();
+            mAdapter = new RegExDataAdapter(regExList);
+            mRecyclerView.SetAdapter(mAdapter);
+        }
+
+        private void FetchTrackingRegExData(string httpRegExPatternEndPoint)
+        {
+            string jsonTrackingRegexs = null;
+            //string httpRegExPatternEndPoint = intent.GetStringExtra("httpEndPoint");
+
+            string databasePath = System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
+            "localscandata.db3");
+            SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
+            // Delete the current Regex data
+            try
+            {
+                Log.Info("TAG-SETTINGS", "Delete Exisiting data");
+                databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+            }
+            catch
+            {
+                Log.Info("TAG-SETTINGS", "Unable to delete Exisiting data");
+            }
+
+            // Attempt to fetch the new data, on fail use a hard coded set
+            try
+            {
+                using (var webClient = new System.Net.WebClient())
+                {
+                    jsonTrackingRegexs = webClient.DownloadString(httpRegExPatternEndPoint);
+                    Log.Info("TAG-SETTINGS", "DownLoad Regexs");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Info("TAG-SETTINGS", "Loading regexs failed");
+                jsonTrackingRegexs = "[{\"Failed\": \"/" + e.Message + "/\"}]";
+            }
+            databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+
+
+            List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
+
+            foreach (Dictionary<string, string> lst in obj)
+            {
+                foreach (KeyValuePair<string, string> item in lst)
+                {
+                    // @Todo: There is an ecoding bug here, in the DX numbers because /b encodes incorrectly
+                    string testText = item.Value;
+                    int startIndex = testText.IndexOf('/');
+                    int endIndex = testText.LastIndexOf('/');
+                    string patternString = testText.Substring(startIndex + 1, endIndex - startIndex - 1);
+                    var record = new DespatchBayExpressDataBase.TrackingNumberPatterns
+                    {
+                        Courier = item.Key,
+                        Pattern = patternString,
+                        IsEnabled = true
+                    };
+                    databaseConnection.Insert(record);
+                }
+            }
+
+            Log.Info("TAG-SETTINGS", "FetchTrackingRegExData Complete");
+        }
+
+        public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.menu_settings, menu);
             return true;
