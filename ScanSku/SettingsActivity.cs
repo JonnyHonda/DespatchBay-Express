@@ -127,20 +127,16 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
                                 Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
-                                Intent submitDataIntent = new Intent(this, typeof(SubmitDataIntentService));
-                                submitDataIntent.PutExtra("httpEndPoint", loadConfigUrl.Text);
-                                StartService(submitDataIntent);
+                                System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
                                 Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Short).Show();
                                 TrackingScan.Text = "";
-
-
                             }
                         }
                         catch(Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
                             Toast.MakeText(this, "Config QR code not recognised", ToastLength.Long).Show();
-
+                            TrackingScan.Text = "";
                         }
 
                     }
@@ -148,78 +144,69 @@ namespace DespatchBayExpress
             };
 
     }
-        
-        /// <summary>
-        /// An Intent service to attempt to load the Regexex from a Production url
-        /// </summary>
-        [Service]
-        public class SubmitDataIntentService : IntentService
+
+
+        private void FetchTrackingRegExData(string httpRegExPatternEndPoint)
         {
-            public SubmitDataIntentService() : base("SubmitCollectionDataIntentService")
+            string jsonTrackingRegexs = null;
+            //string httpRegExPatternEndPoint = intent.GetStringExtra("httpEndPoint");
+
+            string databasePath = System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
+            "localscandata.db3");
+            SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
+            // Delete the current Regex data
+            try
             {
+                Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
+                databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+            }
+            catch
+            {
+                Log.Info("TAG-SETTINGS", "Settings - Unable to delete Exisiting data");
             }
 
-            protected override void OnHandleIntent(Android.Content.Intent intent)
+            // Attempt to fetch the new data, on fail use a hard coded set
+            try
             {
-                string jsonTrackingRegexs = null;
-                string httpRegExPatternEndPoint = intent.GetStringExtra("httpEndPoint");
-
-                string databasePath = System.IO.Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
-                "localscandata.db3");
-                SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
-                // Delete the current Regex data
-                try
+                using (var webClient = new System.Net.WebClient())
                 {
-                    Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
-                    databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+                    jsonTrackingRegexs = webClient.DownloadString(httpRegExPatternEndPoint);
+                    Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
                 }
-                catch {
-                    Log.Info("TAG-SETTINGS", "Settings - Unable to delete Exisiting data");
-                }
-
-                // Attempt to fetch the new data, on fail use a hard coded set
-                try
-                {
-                    using (var webClient = new System.Net.WebClient())
-                    {
-                        jsonTrackingRegexs = webClient.DownloadString(httpRegExPatternEndPoint);
-                        Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
-                    }
-                }
-                catch(Exception e)
-                {
-                    Log.Info("TAG-SETTINGS", "Settings - Loading regexs failed");
-                    jsonTrackingRegexs = "[{\"Failed\": \"/"+ e.Message +"/\"}]";
-                }
-                databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
-
-                
-                List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
-
-                foreach (Dictionary<string, string> lst in obj)
-                {
-                    foreach (KeyValuePair<string, string> item in lst)
-                    {
-                        // @Todo: There is an ecoding bug here, in the DX numbers because /b encodes incorrectly
-                        string testText = item.Value;
-                        int startIndex = testText.IndexOf('/');
-                        int endIndex = testText.LastIndexOf('/');
-                        string patternString = testText.Substring(startIndex + 1, endIndex - startIndex - 1);
-                        var record = new DespatchBayExpressDataBase.TrackingNumberPatterns
-                        {
-                            Courier = item.Key,
-                            Pattern = patternString,
-                            IsEnabled = true
-                        };
-                        databaseConnection.Insert(record);
-                    }
-                }
-                   Log.Info("TAG-SETTINGS", "Settings - Intent Complete");
             }
+            catch (Exception e)
+            {
+                Log.Info("TAG-SETTINGS", "Settings - Loading regexs failed");
+                jsonTrackingRegexs = "[{\"Failed\": \"/" + e.Message + "/\"}]";
+            }
+            databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
+
+
+            List<Dictionary<string, string>> obj = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonTrackingRegexs);
+
+            foreach (Dictionary<string, string> lst in obj)
+            {
+                foreach (KeyValuePair<string, string> item in lst)
+                {
+                    // @Todo: There is an ecoding bug here, in the DX numbers because /b encodes incorrectly
+                    string testText = item.Value;
+                    int startIndex = testText.IndexOf('/');
+                    int endIndex = testText.LastIndexOf('/');
+                    string patternString = testText.Substring(startIndex + 1, endIndex - startIndex - 1);
+                    var record = new DespatchBayExpressDataBase.TrackingNumberPatterns
+                    {
+                        Courier = item.Key,
+                        Pattern = patternString,
+                        IsEnabled = true
+                    };
+                    databaseConnection.Insert(record);
+                }
+            }
+            Log.Info("TAG-SETTINGS", "Settings - Intent Complete");
         }
 
-    public override bool OnCreateOptionsMenu(IMenu menu)
+        public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.menu_settings, menu);
             return true;
