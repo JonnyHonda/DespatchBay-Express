@@ -149,12 +149,12 @@ namespace DespatchBayExpress
             // Delete the current Regex data
             try
             {
-                Log.Info("TAG-SETTINGS", "Settings - Delete Exisiting data");
+                Log.Info("TAG-SETTINGS", "Delete Exisiting data");
                 databaseConnection.DeleteAll<DespatchBayExpressDataBase.TrackingNumberPatterns>();
             }
             catch
             {
-                Log.Info("TAG-SETTINGS", "Settings - Unable to delete Exisiting data");
+                Log.Info("TAG-SETTINGS", "Unable to delete Exisiting data");
             }
 
             // Attempt to fetch the new data, on fail use a hard coded set
@@ -163,12 +163,12 @@ namespace DespatchBayExpress
                 using (var webClient = new System.Net.WebClient())
                 {
                     jsonTrackingRegexs = webClient.DownloadString(httpRegExPatternEndPoint);
-                    Log.Info("TAG-SETTINGS", "Settings - DownLoad Regexs");
+                    Log.Info("TAG-SETTINGS", "DownLoad Regexs");
                 }
             }
             catch (Exception e)
             {
-                Log.Info("TAG-SETTINGS", "Settings - Loading regexs failed");
+                Log.Info("TAG-SETTINGS", "Loading regexs failed");
                 jsonTrackingRegexs = "[{\"Failed\": \"/" + e.Message + "/\"}]";
             }
             databaseConnection.CreateTable<DespatchBayExpressDataBase.TrackingNumberPatterns>();
@@ -195,7 +195,7 @@ namespace DespatchBayExpress
                 }
             }
 
-            Log.Info("TAG-SETTINGS", "Settings - FetchTrackingRegExData Complete");
+            Log.Info("TAG-SETTINGS", "FetchTrackingRegExData Complete");
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)
