@@ -1,0 +1,24 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+
+namespace DespatchBayExpress
+{
+    public partial class Configuration
+    {
+        [JsonProperty("UpdateConfiguration")]
+        public List<UpdateConfiguration> UpdateConfiguration { get; set; }
+    }
+
+    public partial class UpdateConfiguration
+    {
+        [JsonProperty("UploadEndPoint")]
+        public Uri UploadEndPoint { get; set; }
+
+        [JsonProperty("RegexEndPoint")]
+        public Uri RegexEndPoint { get; set; }
+
+        [JsonProperty("ApplicationKey")]
+        public Guid ApplicationKey { get; set; }
+    }
+}
