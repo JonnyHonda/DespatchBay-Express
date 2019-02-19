@@ -14,24 +14,6 @@ using System.Collections.Generic;
 
 namespace DespatchBayExpress
 {
-    public partial class Configuration
-    {
-        [JsonProperty("UpdateConfiguration")]
-        public List<UpdateConfiguration> UpdateConfiguration { get; set; }
-    }
-
-    public partial class UpdateConfiguration
-    {
-        [JsonProperty("UploadEndPoint")]
-        public Uri UploadEndPoint { get; set; }
-
-        [JsonProperty("RegexEndPoint")]
-        public Uri RegexEndPoint { get; set; }
-
-        [JsonProperty("ApplicationKey")]
-        public Guid ApplicationKey { get; set; }
-    }
-
     [Activity(WindowSoftInputMode = SoftInput.StateAlwaysHidden, Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = false)]
     public class SettingsActivity : AppCompatActivity
     {

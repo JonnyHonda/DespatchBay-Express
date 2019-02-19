@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AboutActivity.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="RegEx.cs" />
     <Compile Include="BarcodeScan.cs" />
     <Compile Include="Collection.cs" />
