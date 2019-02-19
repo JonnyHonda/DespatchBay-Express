@@ -106,7 +106,7 @@ namespace DespatchBayExpress
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
                                 taskA.Wait();
                                 Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
-                                
+                             
                             }
                         }
                         catch(Exception ex)
@@ -195,7 +195,7 @@ namespace DespatchBayExpress
                 }
             }
             
-            Log.Info("TAG-SETTINGS", "Settings - Intent Complete");
+            Log.Info("TAG-SETTINGS", "Settings - FetchTrackingRegExData Complete");
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)
