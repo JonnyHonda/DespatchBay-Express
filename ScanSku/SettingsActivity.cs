@@ -128,7 +128,7 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
                                 Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
-                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Short).Show();
+                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
                                 TrackingScan.Text = "";
                             }
                         }
