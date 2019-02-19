@@ -288,7 +288,6 @@ namespace DespatchBayExpress
                     string loadConfigUrl = ap.GetAccessKey("loadConfigUrl");
                     string applicationKey = ap.GetAccessKey("applicationKey");
 
-
                     // Create a Dictionary for the parameters
                     Dictionary<string, string> Parameters = new Dictionary<string, string>
                     {
@@ -319,7 +318,7 @@ namespace DespatchBayExpress
                     {
                         Log.Info("SubmitCollectionData", ex.Message);
                     }
-                    TrackingNumberDataProvider();
+                    
                     if (status == false)
                     {
                         Toast.MakeText(this, "There was a problem with the upload", ToastLength.Long).Show();
@@ -327,11 +326,9 @@ namespace DespatchBayExpress
                     else {
                         Toast.MakeText(this, "Upload complete", ToastLength.Long).Show();
                     }
-                    // So in theory, a set up scans will be bundeled up and sent to the end point,
-                    // New scans can be made even before the upload had completed.
-                    // These scans will remain in the view after the upload has completed and marked the bundeled
-                    // scans as sent.
-                    // This could be a problem if the upload fails
+
+                    TrackingNumberDataProvider();
+
                     // Create a new Batch number;
                     SetBatchNumber(true);
                     break;
@@ -348,7 +345,7 @@ namespace DespatchBayExpress
 
         private bool SubmitCollectionData(Dictionary<string, string> parameters)
         {
-            Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
+            Log.Info("TAG-ASYNCTASK", "Beginning SubmitCollectionData");
             string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             string httpEndPoint = parameters["httpEndPoint"];
             string lontitude = parameters["lontitude"];
@@ -358,7 +355,7 @@ namespace DespatchBayExpress
 
             bool status = true;
             string databasePath = parameters["databasePath"];
-            Log.Info("TAG-INTENT", "INTENT - Connect to Database");
+            Log.Info("TAG-ASYNCTASK", "Connect to Database");
 
             SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
             // Create a new Collection
@@ -380,7 +377,7 @@ namespace DespatchBayExpress
                 collection.Gps = collectionLocation;
                 collection.batchnumber = batch.Batch;
                 collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                Log.Info("TAG-INTENT", "INTENT - Collection created");
+                Log.Info("TAG-ASYNCTASK", "Collection created");
 
                 // Need to select all the scans that have not been uploaded and match the current batch
                 var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
@@ -404,10 +401,10 @@ namespace DespatchBayExpress
                 }
                 collection.Scans = scannedParcelList;
                 string jsonToUpload;
-                Log.Info("TAG-INTENT", "INTENT - JSON Created");
+                Log.Info("TAG-ASYNCTASK", "JSON Created");
                 jsonToUpload = collection.ToJson();
-                Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
-                Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
+                Log.Info("TAG-ASYNCTASK", jsonToUpload);
+                Log.Info("TAG-ASYNCTASK", "Webrequest Created");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
@@ -423,7 +420,7 @@ namespace DespatchBayExpress
                         streamWriter.Flush();
                         streamWriter.Close();
                     }
-                    Log.Info("TAG-INTENT", "INTENT - Fetch Response");
+                    Log.Info("TAG-ASYNCTASK", "Fetch Response");
 
                     HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
@@ -433,32 +430,32 @@ namespace DespatchBayExpress
                         var jsonResult = streamReader.ReadToEnd();
                         RemoteServiceResult result = new RemoteServiceResult();
                         result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
-                        Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
+                        Log.Info("TAG-ASYNCTASK", jsonResult);
 
                         if (httpResponse.StatusCode == HttpStatusCode.OK)
                         {
-                            Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
+                            Log.Info("TAG-ASYNCTASK", "Success, update parcels");
 
                             parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, collection.batchnumber);
                         }
                         else
                         {
-                            Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
+                            Log.Info("TAG-ASYNCTASK", "Did recieve a success response");
 
                         }
                     }
                     httpResponse.Close();
-                    Log.Info("TAG-INTENT", "INTENT - Response Closes");
+                    Log.Info("TAG-ASYNCTASK", "Response Closes");
                 }
                 catch (Exception ex)
                 {
-                    Log.Info("TAG-INTENT", "INTENT - Response Failed");
-                    Log.Info("TAG-INTENT", ex.Message);
+                    Log.Info("TAG-ASYNCTASK", "Response Failed");
+                    Log.Info("TAG-ASYNCTASK", ex.Message);
                     status = false;
                 }
 
             }
-            Log.Info("TAG-INTENT", "INTENT work complete");
+            Log.Info("TAG-ASYNCTASK", "Work complete");
             return status;
         }
 
