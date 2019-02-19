@@ -2720,6 +2720,9 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f0c0059
 			public const int clip_vertical = 2131492953;
 			
+			// aapt resource value: 0x7f0c0098
+			public const int code_name = 2131493016;
+			
 			// aapt resource value: 0x7f0c0044
 			public const int collapseActionView = 2131492932;
 			
@@ -2815,9 +2818,6 @@ namespace DespatchBayExpress
 			
 			// aapt resource value: 0x7f0c000a
 			public const int ghost_view = 2131492874;
-			
-			// aapt resource value: 0x7f0c009a
-			public const int git_branch = 2131493018;
 			
 			// aapt resource value: 0x7f0c009d
 			public const int header = 2131493021;
@@ -3209,8 +3209,8 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f0c0031
 			public const int useLogo = 2131492913;
 			
-			// aapt resource value: 0x7f0c0098
-			public const int versionInfo = 2131493016;
+			// aapt resource value: 0x7f0c009a
+			public const int version_info = 2131493018;
 			
 			// aapt resource value: 0x7f0c0016
 			public const int view_offset_helper = 2131492886;
@@ -3716,9 +3716,6 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f090010
 			public const int common_signin_button_text_long = 2131296272;
 			
-			// aapt resource value: 0x7f09003c
-			public const int git_branch = 2131296316;
-			
 			// aapt resource value: 0x7f090032
 			public const int password_toggle_content_description = 2131296306;
 			
@@ -3734,23 +3731,23 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f090036
 			public const int path_password_strike_through = 2131296310;
 			
-			// aapt resource value: 0x7f09003e
-			public const int permission_available_location = 2131296318;
-			
 			// aapt resource value: 0x7f09003d
-			public const int permission_location_rationale = 2131296317;
+			public const int permission_available_location = 2131296317;
 			
-			// aapt resource value: 0x7f09003f
-			public const int permissions_not_granted = 2131296319;
+			// aapt resource value: 0x7f09003c
+			public const int permission_location_rationale = 2131296316;
 			
-			// aapt resource value: 0x7f090041
-			public const int regex_table = 2131296321;
+			// aapt resource value: 0x7f09003e
+			public const int permissions_not_granted = 2131296318;
+			
+			// aapt resource value: 0x7f090040
+			public const int regex_table = 2131296320;
 			
 			// aapt resource value: 0x7f090022
 			public const int search_menu_title = 2131296290;
 			
-			// aapt resource value: 0x7f090040
-			public const int settings_table = 2131296320;
+			// aapt resource value: 0x7f09003f
+			public const int settings_table = 2131296319;
 			
 			// aapt resource value: 0x7f090037
 			public const int status_bar_notification_info_overflow = 2131296311;
