@@ -40,9 +40,9 @@ namespace DespatchBayExpress
         Location currentLocation;
         LocationManager locationManager;
         string locationProvider;
-  
+
         MediaPlayer mediaPlayer;
-        
+
         RecyclerView mRecyclerView;
         RecyclerView.LayoutManager mLayoutManager;
         TrackingNumberDataAdapter mAdapter;
@@ -50,7 +50,6 @@ namespace DespatchBayExpress
         EditText TrackingScan;
         Guid batch;
         string batchnumber;
-        static bool GLOBAL_RECYCLEVIEW_REFRESHED = true;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -86,26 +85,8 @@ namespace DespatchBayExpress
                 databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
 
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
+                TrackingNumberDataProvider();
 
-                /// This Timer, checks the the Recycler views datasource every 2 seconds and updates it
-                /// I don't like this
-                System.Timers.Timer threadTimer = new System.Timers.Timer();
-                threadTimer.Start();
-                threadTimer.Interval = 2000;
-                threadTimer.Enabled = true;
-                threadTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-                {
-                    RunOnUiThread(() =>
-                    {
-                        if (GLOBAL_RECYCLEVIEW_REFRESHED)
-                        {
-                            GLOBAL_RECYCLEVIEW_REFRESHED = false;
-                            // Log.Debug("TAG-TIMER", "Every Two Seconds");
-                            TrackingNumberDataProvider();
-                        }
-                    });
-                };
-             
                 // We have permission, go ahead and use the GPS.
                 Log.Debug("GPS", "We have permission, go ahead and use the GPS.");
                 InitializeLocationManager();
@@ -176,7 +157,8 @@ namespace DespatchBayExpress
                                     mRecyclerView.RefreshDrawableState();
                                     mediaPlayer.Start();
                                 }
-                                catch (SQLiteException ex) {
+                                catch (SQLiteException ex)
+                                {
                                     Toast.MakeText(this, "Scan Error : Duplicated Barcode Scan", ToastLength.Long).Show();
                                     Log.Info("SCANNER", "Scan Error : " + ex.Message);
 
@@ -246,7 +228,6 @@ namespace DespatchBayExpress
             mAdapter = new TrackingNumberDataAdapter(mBarcodeScannerList);
             mRecyclerView.SetAdapter(mAdapter);
             mRecyclerView.ScrollToPosition(0);
-            
         }
 
         private void SetBatchNumber(bool regenerate)
@@ -301,38 +282,51 @@ namespace DespatchBayExpress
                     break;
                 case Resource.Id.menu_upload:
                     // Begin the process of uploading the data
-                    Toast.MakeText(this, "Connecting to remote service", ToastLength.Long).Show();
                     Context mContext = Application.Context;
                     AppPreferences ap = new AppPreferences(mContext);
                     string httpEndPoint = ap.GetAccessKey("submitDataUrl");
                     string loadConfigUrl = ap.GetAccessKey("loadConfigUrl");
                     string applicationKey = ap.GetAccessKey("applicationKey");
-                    
-                    // This code might be called from within an Activity, for example in an event
-                    // handler for a button click.
-                    Intent submitDataIntent = new Intent(this, typeof(SubmitCollectionDataIntentService));
-                    
-                    // Pass some vars to the Intent
-                    submitDataIntent.PutExtra("httpEndPoint", httpEndPoint);
-                    submitDataIntent.PutExtra("userAgent", "Man-In-VAN Handheld Device");
-                    submitDataIntent.PutExtra("token", applicationKey);
+
+
+                    // Create a Dictionary for the parameters
+                    Dictionary<string, string> Parameters = new Dictionary<string, string>
+                    {
+                        { "httpEndPoint", httpEndPoint },
+                        { "userAgent", "Man-In-VAN Handheld Device" },
+                        { "token", applicationKey }
+                    };
                     try
                     {
-                        submitDataIntent.PutExtra("lontitude", currentLocation.Longitude.ToString());
-                        submitDataIntent.PutExtra("latitude", currentLocation.Latitude.ToString());
+                        Parameters.Add("lontitude", currentLocation.Longitude.ToString());
+                        Parameters.Add("latitude", currentLocation.Latitude.ToString());
                     }
                     catch
                     {
-                        submitDataIntent.PutExtra("lontitude", "");
-                        submitDataIntent.PutExtra("latitude", "");
+                        Parameters.Add("lontitude", "");
+                        Parameters.Add("latitude", "");
                     }
-                    //submitDataIntent.PutExtra("batchnumber", batchnumber);
-                    submitDataIntent.PutExtra("databasePath", databasePath);
+                    Parameters.Add("databasePath", databasePath);
 
-                    // Actually start the service, 
-                    // this intent service will run on a separate thread allowing the application
-                    // to continue.
-                    StartService(submitDataIntent);
+                    bool status = false;
+                    try
+                    {
+                        // Run the SubmitCollectionData as a Async Task
+                        System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => status = SubmitCollectionData(Parameters));
+                        taskA.Wait();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Info("SubmitCollectionData", ex.Message);
+                    }
+                    TrackingNumberDataProvider();
+                    if (status == false)
+                    {
+                        Toast.MakeText(this, "There was a problem with the upload", ToastLength.Long).Show();
+                    }
+                    else {
+                        Toast.MakeText(this, "Upload complete", ToastLength.Long).Show();
+                    }
                     // So in theory, a set up scans will be bundeled up and sent to the end point,
                     // New scans can be made even before the upload had completed.
                     // These scans will remain in the view after the upload has completed and marked the bundeled
@@ -340,11 +334,10 @@ namespace DespatchBayExpress
                     // This could be a problem if the upload fails
                     // Create a new Batch number;
                     SetBatchNumber(true);
-            break;
+                    break;
                 case Resource.Id.menu_sqldatadelete:
                     databaseConnection.DeleteAll<DespatchBayExpressDataBase.ParcelScans>();
-                    // Ugly and brutal way to redraw current view
-                    this.Recreate();
+                    TrackingNumberDataProvider();
                     break;
 
             }
@@ -352,130 +345,121 @@ namespace DespatchBayExpress
             return base.OnOptionsItemSelected(item);
         }
 
-        /*
-         * This service function handles out of thread work
-         * 
-         * 
-         * */
-        [Service]
-        public class SubmitCollectionDataIntentService : IntentService
+
+        private bool SubmitCollectionData(Dictionary<string, string> parameters)
         {
-            public SubmitCollectionDataIntentService() : base("SubmitCollectionDataIntentService")
+            Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
+            string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+            string httpEndPoint = parameters["httpEndPoint"];
+            string lontitude = parameters["lontitude"];
+            string latitude = parameters["latitude"];
+            string userAgent = parameters["userAgent"];
+            string token = parameters["token"];
+
+            bool status = true;
+            string databasePath = parameters["databasePath"];
+            Log.Info("TAG-INTENT", "INTENT - Connect to Database");
+
+            SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
+            // Create a new Collection
+            Collection collection = new Collection();
+            // Set the Base values
+            Gps collectionLocation = new Gps();
+            try
             {
+                collectionLocation.Latitude = Convert.ToDouble(latitude);
+                collectionLocation.Longitude = Convert.ToDouble(lontitude);
             }
+            catch { }
 
-            protected override void OnHandleIntent(Android.Content.Intent intent)
+            // Fetch all the batches that have not been uploaded
+            var batchnumbers = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT Batch FROM ParcelScans WHERE Sent IS null GROUP BY Batch");
+
+            foreach (var batch in batchnumbers)
             {
-                Log.Info("TAG-INTENT", "INTENT - Begining Intent Service");
-                string startTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                string httpEndPoint = intent.GetStringExtra("httpEndPoint");
-                string lontitude = intent.GetStringExtra("lontitude");
-                string latitude = intent.GetStringExtra("latitude");
-                string userAgent = intent.GetStringExtra("userAgent");
-                string token = intent.GetStringExtra("token");
-                // string batchnumber = intent.GetStringExtra("batchnumber");
-                string databasePath = intent.GetStringExtra("databasePath");
-                Log.Info("TAG-INTENT", "INTENT - Connect to Database");
-               
-                SQLiteConnection databaseConnection = new SQLiteConnection(databasePath);
-                // Create a new Collection
-                Collection collection = new Collection();
-                // Set the Base values
-                Gps collectionLocation = new Gps();
-                try
+                collection.Gps = collectionLocation;
+                collection.batchnumber = batch.Batch;
+                collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+                Log.Info("TAG-INTENT", "INTENT - Collection created");
+
+                // Need to select all the scans that have not been uploaded and match the current batch
+                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
+                List<Scan> scannedParcelList = new List<Scan>();
+
+                foreach (var parcel in parcelScans)
                 {
-                    collectionLocation.Latitude = Convert.ToDouble(latitude);
-                    collectionLocation.Longitude = Convert.ToDouble(lontitude);
-                }
-                catch { }
-
-                // Fetch all the batches that have not been uploaded
-                var batchnumbers = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT Batch FROM ParcelScans WHERE Sent IS null GROUP BY Batch");
-
-                foreach (var batch in batchnumbers)
-                {
-                    collection.Gps = collectionLocation;
-                    collection.batchnumber = batch.Batch;
-                    collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-                    Log.Info("TAG-INTENT", "INTENT - Collection created");
-
-                    // Need to select all the scans that have not been uploaded and match the current batch
-                    var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
-                    List<Scan> scannedParcelList = new List<Scan>();
-
-                    foreach (var parcel in parcelScans)
-                    {
-                        Scan scannedParcelListElement = new Scan();
-                        Gps scannedParcelLocation = new Gps();
-                        scannedParcelListElement.Timestamp = parcel.ScanTime;
-                        // Because Locations can be null
-                        try
-                        {
-                            scannedParcelLocation.Longitude = (double)parcel.Longitude;
-                            scannedParcelLocation.Latitude = (double)parcel.Latitude;
-                        }
-                        catch { }
-                        scannedParcelListElement.Barcode = parcel.TrackingNumber;
-                        scannedParcelListElement.Gps = scannedParcelLocation;
-                        scannedParcelList.Add(scannedParcelListElement);
-                    }
-                    collection.Scans = scannedParcelList;
-                    string jsonToUpload;
-                    Log.Info("TAG-INTENT", "INTENT - JSON Created");
-                    jsonToUpload = collection.ToJson();
-                    Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
-                    Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
-                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
-                    httpWebRequest.ContentType = "application/json";
-                    httpWebRequest.Method = "POST";
-                    httpWebRequest.UserAgent += userAgent;
-                    httpWebRequest.Headers["x-db-api-key"] = token;
-                    httpWebRequest.Headers["x-db-batch"] = collection.batchnumber;
-                    
+                    Scan scannedParcelListElement = new Scan();
+                    Gps scannedParcelLocation = new Gps();
+                    scannedParcelListElement.Timestamp = parcel.ScanTime;
+                    // Because Locations can be null
                     try
                     {
-                        using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                        {
-                            streamWriter.Write(jsonToUpload);
-                            streamWriter.Flush();
-                            streamWriter.Close();
-                        }
-                        Log.Info("TAG-INTENT", "INTENT - Fetch Response");
-
-                        HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-
-                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                        {
-                            var jsonResult = streamReader.ReadToEnd();
-                            RemoteServiceResult result = new RemoteServiceResult();
-                            result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
-                            Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
-
-                            if (httpResponse.StatusCode == HttpStatusCode.OK)
-                            {
-                                Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
-
-                                parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, collection.batchnumber);
-                            }
-                            else
-                            {
-                                Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
-
-                            }
-                        }
-                        httpResponse.Close();
-                        Log.Info("TAG-INTENT", "INTENT - Response Closes");
-                        GLOBAL_RECYCLEVIEW_REFRESHED = true;
+                        scannedParcelLocation.Longitude = (double)parcel.Longitude;
+                        scannedParcelLocation.Latitude = (double)parcel.Latitude;
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Info("TAG-INTENT", "INTENT - Response Failed");
-                        Log.Info("TAG-INTENT", ex.Message);
-                    }
+                    catch { }
+                    scannedParcelListElement.Barcode = parcel.TrackingNumber;
+                    scannedParcelListElement.Gps = scannedParcelLocation;
+                    scannedParcelList.Add(scannedParcelListElement);
                 }
-                Log.Info("TAG-INTENT", "INTENT work complete"); 
+                collection.Scans = scannedParcelList;
+                string jsonToUpload;
+                Log.Info("TAG-INTENT", "INTENT - JSON Created");
+                jsonToUpload = collection.ToJson();
+                Log.Info("TAG-INTENT", "INTENT - " + jsonToUpload);
+                Log.Info("TAG-INTENT", "INTENT - Webrequest Created");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(httpEndPoint);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                httpWebRequest.UserAgent += userAgent;
+                httpWebRequest.Headers["x-db-api-key"] = token;
+                httpWebRequest.Headers["x-db-batch"] = collection.batchnumber;
+
+                try
+                {
+                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                    {
+                        streamWriter.Write(jsonToUpload);
+                        streamWriter.Flush();
+                        streamWriter.Close();
+                    }
+                    Log.Info("TAG-INTENT", "INTENT - Fetch Response");
+
+                    HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var jsonResult = streamReader.ReadToEnd();
+                        RemoteServiceResult result = new RemoteServiceResult();
+                        result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
+                        Log.Info("TAG-INTENT", "INTENT - " + jsonResult);
+
+                        if (httpResponse.StatusCode == HttpStatusCode.OK)
+                        {
+                            Log.Info("TAG-INTENT", "INTENT - Success, update parcels");
+
+                            parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, collection.batchnumber);
+                        }
+                        else
+                        {
+                            Log.Info("TAG-INTENT", "INTENT - Did recieve a success response");
+
+                        }
+                    }
+                    httpResponse.Close();
+                    Log.Info("TAG-INTENT", "INTENT - Response Closes");
+                }
+                catch (Exception ex)
+                {
+                    Log.Info("TAG-INTENT", "INTENT - Response Failed");
+                    Log.Info("TAG-INTENT", ex.Message);
+                    status = false;
+                }
+
             }
+            Log.Info("TAG-INTENT", "INTENT work complete");
+            return status;
         }
 
         /*
@@ -487,7 +471,7 @@ namespace DespatchBayExpress
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == REQUEST_LOCATION)
-            {        
+            {
                 // Received permission jsonResult for GPS permission.
                 Log.Info("GPS", "Received response for Location permission request.");
                 var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);

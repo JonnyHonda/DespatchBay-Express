@@ -48,7 +48,7 @@ namespace DespatchBayExpress
             Context mContext = Application.Context;
             AppPreferences applicationPreferences = new AppPreferences(mContext);
             base.OnCreate(savedInstanceState);
- 
+
             SetContentView(Resource.Layout.activity_settings);
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
@@ -102,14 +102,14 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
-                                Log.Info("TAG-SETTINGS", "Settings - Call the Intent Service");
+                                Log.Info("TAG-SETTINGS", "Settings - Call FetchTrackingRegExData");
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
                                 taskA.Wait();
                                 Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
-                             
+
                             }
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             // Any Error in the above block will cause this catch to fire - Even if the json keys don't exist
                             Toast.MakeText(this, "Config QR code not recognised", ToastLength.Long).Show();
@@ -120,7 +120,7 @@ namespace DespatchBayExpress
                 }
             };
 
-    }
+        }
 
         private void PopulateRecycleView()
         {
@@ -194,7 +194,7 @@ namespace DespatchBayExpress
                     databaseConnection.Insert(record);
                 }
             }
-            
+
             Log.Info("TAG-SETTINGS", "Settings - FetchTrackingRegExData Complete");
         }
 
