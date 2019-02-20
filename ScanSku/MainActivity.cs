@@ -60,7 +60,8 @@ namespace DespatchBayExpress
             if (
                 string.IsNullOrEmpty(applicationPreferences.GetAccessKey("submitDataUrl")) ||
                 string.IsNullOrEmpty(applicationPreferences.GetAccessKey("loadConfigUrl")) ||
-                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("applicationKey"))
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("applicationKey")) ||
+                string.IsNullOrEmpty(applicationPreferences.GetAccessKey("retentionPeriod"))
                 )
             {
                 // No, well start the setting activity
@@ -288,12 +289,16 @@ namespace DespatchBayExpress
                     string loadConfigUrl = ap.GetAccessKey("loadConfigUrl");
                     string applicationKey = ap.GetAccessKey("applicationKey");
 
+                    string retentionPeriod = ap.GetAccessKey("retentionPeriod");
+
                     // Create a Dictionary for the parameters
                     Dictionary<string, string> Parameters = new Dictionary<string, string>
                     {
                         { "httpEndPoint", httpEndPoint },
                         { "userAgent", "Man-In-VAN Handheld Device" },
-                        { "token", applicationKey }
+                        { "token", applicationKey },
+                        { "retentionPeriod", retentionPeriod },
+                        
                     };
                     try
                     {
@@ -336,7 +341,7 @@ namespace DespatchBayExpress
                     }
 
                     TrackingNumberDataProvider();
-
+                   
                     // Create a new Batch number;
                     SetBatchNumber(true);
                     break;
@@ -361,6 +366,7 @@ namespace DespatchBayExpress
             string userAgent = parameters["userAgent"];
             string token = parameters["token"];
             string setialNumber = parameters["serialNumber"];
+            string retentionPeriod = parameters["retentionPeriod"];
 
             bool status = true;
             string databasePath = parameters["databasePath"];
@@ -445,7 +451,6 @@ namespace DespatchBayExpress
                         if (httpResponse.StatusCode == HttpStatusCode.OK)
                         {
                             Log.Info("TAG-ASYNCTASK", "Success, update parcels");
-
                             parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set Sent=? WHERE Sent IS null and batch=?", startTime, collection.batchnumber);
                         }
                         else
@@ -465,7 +470,12 @@ namespace DespatchBayExpress
                 }
 
             }
+            Int16 days = Convert.ToInt16(retentionPeriod);
+            var dateTime = DateTime.Now.AddDays(-days);
+            var deleteScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("DELETE FROM ParcelScans WHERE Sent <= ?", dateTime.ToString("yyyy-MM-ddTHH:mm:ss"));
+
             Log.Info("TAG-ASYNCTASK", "Work complete");
+
             return status;
         }
 

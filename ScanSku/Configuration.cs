@@ -20,5 +20,9 @@ namespace DespatchBayExpress
 
         [JsonProperty("ApplicationKey")]
         public Guid ApplicationKey { get; set; }
+
+        [JsonProperty("RetentionPeriod")]
+        public long RetentionPeriod { get; set; }
+
     }
 }

@@ -110,6 +110,18 @@
 					
 					/>
 					</TableRow>
+				<TableRow 
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent" 
+        android:gravity="center_horizontal"> 
+			<TextView
+				android:id="@+id/retention_period"
+					android:text="Retention Period"
+					android:layout_height="wrap_content"
+					android:textSize="15sp"
+					
+					/>
+					</TableRow>
 				    <!-- Row 4 with single column -->
 				<TableRow
 					android:layout_height="wrap_content"
