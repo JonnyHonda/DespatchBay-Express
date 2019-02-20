@@ -84,6 +84,14 @@ namespace DespatchBayExpress
                                 applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
+                                try
+                                {
+                                     applicationPreferences.SaveAccessKey("serialNumber", Android.OS.Build.Serial.ToString(), true);
+                                }
+                                catch
+                                {
+                                    applicationPreferences.SaveAccessKey("serialNumber", "", true);
+                                }
                                 Log.Info("TAG-SETTINGS", "Settings - Call FetchTrackingRegExData");
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
                                 taskA.Wait();
