@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using SQLite;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace DespatchBayExpress
 {
@@ -48,6 +49,10 @@ namespace DespatchBayExpress
             applicationKey.Text = applicationPreferences.GetAccessKey("applicationKey");
             applicationKey.Text = applicationKey.Text.TrimEnd('\r', '\n');
 
+            TextView retentionPeriod = FindViewById<TextView>(Resource.Id.retention_period);
+            retentionPeriod.Text = applicationPreferences.GetAccessKey("retentionPeriod");
+            retentionPeriod.Text = retentionPeriod.Text.TrimEnd('\r', '\n');
+
             string databasePath = System.IO.Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
@@ -68,6 +73,7 @@ namespace DespatchBayExpress
                     {
 
                         string jsonstring = TrackingScan.Text;
+                        jsonstring = Regex.Replace(jsonstring, @"\s+", "");
                         Configuration configuration = new Configuration();
                         try
                         {
@@ -79,11 +85,13 @@ namespace DespatchBayExpress
                                     submitDataUrl.Text = configItem.UploadEndPoint.ToString();
                                     loadConfigUrl.Text = configItem.RegexEndPoint.ToString();
                                     applicationKey.Text = configItem.ApplicationKey.ToString();
+                                    retentionPeriod.Text = configItem.RetentionPeriod.ToString();
                                 }
                                 // Save some application preferences
                                 applicationPreferences.SaveAccessKey("submitDataUrl", submitDataUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("loadConfigUrl", loadConfigUrl.Text, true);
                                 applicationPreferences.SaveAccessKey("applicationKey", applicationKey.Text, true);
+                                applicationPreferences.SaveAccessKey("retentionPeriod", retentionPeriod.Text, true);
                                 try
                                 {
                                      applicationPreferences.SaveAccessKey("serialNumber", Android.OS.Build.Serial.ToString(), true);
