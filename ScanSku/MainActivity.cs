@@ -297,6 +297,14 @@ namespace DespatchBayExpress
                     };
                     try
                     {
+                        Parameters.Add("serialNumber", ap.GetAccessKey("serialNumber"));
+                    }
+                    catch
+                    {
+                        Parameters.Add("serialNumber", "");
+                    }
+                    try
+                    {
                         Parameters.Add("lontitude", currentLocation.Longitude.ToString());
                         Parameters.Add("latitude", currentLocation.Latitude.ToString());
                     }
@@ -352,6 +360,7 @@ namespace DespatchBayExpress
             string latitude = parameters["latitude"];
             string userAgent = parameters["userAgent"];
             string token = parameters["token"];
+            string setialNumber = parameters["serialNumber"];
 
             bool status = true;
             string databasePath = parameters["databasePath"];
@@ -411,6 +420,7 @@ namespace DespatchBayExpress
                 httpWebRequest.UserAgent += userAgent;
                 httpWebRequest.Headers["x-db-api-key"] = token;
                 httpWebRequest.Headers["x-db-batch"] = collection.batchnumber;
+                httpWebRequest.Headers["x-db-serial-number"] = setialNumber;
 
                 try
                 {
