@@ -35,9 +35,12 @@ namespace DespatchBayExpress
             public string Batch { get; set; }
             public string Sent { get; set; }
 
+            public bool IsCollected { get; set; } = false;
+
+
             public override string ToString()
             {
-                return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}, Batch={5}, Sent={6}]", ID, TrackingNumber, ScanTime, Longitude, Latitude, Batch, Sent);
+                return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}, Batch={5}, Sent={6}], isCollected={7}", ID, TrackingNumber, ScanTime, Longitude, Latitude, Batch, Sent, IsCollected);
             }
 
         }

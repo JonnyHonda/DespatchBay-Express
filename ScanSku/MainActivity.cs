@@ -396,6 +396,10 @@ namespace DespatchBayExpress
 
                 // Need to select all the scans that have not been uploaded and match the current batch
                 var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
+
+                // regardless of whether we get a successful upload we still must flag the items as being collected, 
+                // the assumtion being that they will have been taken away even if the dirver did not upload the collection 
+                parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set IsCollected = 1  WHERE Sent IS null and batch=?", collection.batchnumber);
                 List<Scan> scannedParcelList = new List<Scan>();
 
                 foreach (var parcel in parcelScans)
@@ -447,7 +451,7 @@ namespace DespatchBayExpress
                         RemoteServiceResult result = new RemoteServiceResult();
                         result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
                         Log.Info("TAG-ASYNCTASK", jsonResult);
-
+                        
                         if (httpResponse.StatusCode == HttpStatusCode.OK)
                         {
                             Log.Info("TAG-ASYNCTASK", "Success, update parcels");
