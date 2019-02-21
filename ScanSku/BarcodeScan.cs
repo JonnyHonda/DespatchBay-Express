@@ -51,6 +51,7 @@ namespace DespatchBayExpress
             }
             barcodes = CurrentScans.ToArray();
         }
+
         // Return the number of barcodes in the view 
         public int NumBarcodes
         {

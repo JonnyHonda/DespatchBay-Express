@@ -394,12 +394,13 @@ namespace DespatchBayExpress
                 collection.Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
                 Log.Info("TAG-ASYNCTASK", "Collection created");
 
-                // Need to select all the scans that have not been uploaded and match the current batch
-                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
-
                 // regardless of whether we get a successful upload we still must flag the items as being collected, 
                 // the assumtion being that they will have been taken away even if the dirver did not upload the collection 
-                parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set IsCollected = 1  WHERE Sent IS null and batch=?", collection.batchnumber);
+                var  parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set IsCollected = 1  WHERE Sent IS null and batch=?", collection.batchnumber);
+                
+                // Need to select all the scans that have not been uploaded and match the current batch
+                 parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
+
                 List<Scan> scannedParcelList = new List<Scan>();
 
                 foreach (var parcel in parcelScans)
