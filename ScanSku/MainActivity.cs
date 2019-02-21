@@ -153,7 +153,7 @@ namespace DespatchBayExpress
                                 try
                                 {
                                     databaseConnection.Insert(newScan);
-                                    mBarcodeScannerList.FetchBarcodeList();
+                                    mBarcodeScannerList.FetchUnCollected();
                                     mAdapter.NotifyDataSetChanged();
                                     mRecyclerView.RefreshDrawableState();
                                     mediaPlayer.Start();
@@ -218,6 +218,7 @@ namespace DespatchBayExpress
         private void TrackingNumberDataProvider()
         {
             mBarcodeScannerList = new BarcodeScannerList();
+            mBarcodeScannerList.FetchUnCollected();
             mRecyclerView = FindViewById<RecyclerView>(Resource.Id.recyclerView);
             ScrollView scrollView = FindViewById<ScrollView>(Resource.Id.scroll_view);
             // Plug in the linear layout manager:

@@ -36,11 +36,47 @@ namespace DespatchBayExpress
 
         public BarcodeScannerList()
         {
-            this.FetchBarcodeList();
+          //  this.FetchBarcodeList();
 
         }
 
-        public void FetchBarcodeList()
+        public void FetchAll()
+        {
+            var scans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans");
+            CurrentScans.Clear();
+            foreach (var scan in scans)
+            {
+                BarcodeScan t = new BarcodeScan { BarcodeText = scan.TrackingNumber };
+                CurrentScans.Add(t);
+            }
+            barcodes = CurrentScans.ToArray();
+        }
+
+        public void FetchUnCollected()
+        {
+            var scans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans where isCollected = 0");
+            CurrentScans.Clear();
+            foreach (var scan in scans)
+            {
+                BarcodeScan t = new BarcodeScan { BarcodeText = scan.TrackingNumber };
+                CurrentScans.Add(t);
+            }
+            barcodes = CurrentScans.ToArray();
+        }
+
+        public void FetchCollected()
+        {
+            var scans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans  where isCollected = 1");
+            CurrentScans.Clear();
+            foreach (var scan in scans)
+            {
+                BarcodeScan t = new BarcodeScan { BarcodeText = scan.TrackingNumber };
+                CurrentScans.Add(t);
+            }
+            barcodes = CurrentScans.ToArray();
+        }
+
+        public void FetchUnsent()
         {
             var scans = db.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null");
             CurrentScans.Clear();
