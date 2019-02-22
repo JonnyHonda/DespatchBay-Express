@@ -2894,26 +2894,29 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f0c00c3
 			public const int media_actions = 2131493059;
 			
-			// aapt resource value: 0x7f0c00db
-			public const int menu_about = 2131493083;
-			
 			// aapt resource value: 0x7f0c00dc
-			public const int menu_exit = 2131493084;
+			public const int menu_about = 2131493084;
+			
+			// aapt resource value: 0x7f0c00dd
+			public const int menu_exit = 2131493085;
+			
+			// aapt resource value: 0x7f0c00d9
+			public const int menu_exportdata = 2131493081;
 			
 			// aapt resource value: 0x7f0c00d7
 			public const int menu_location = 2131493079;
 			
-			// aapt resource value: 0x7f0c00dd
-			public const int menu_main = 2131493085;
+			// aapt resource value: 0x7f0c00de
+			public const int menu_main = 2131493086;
 			
-			// aapt resource value: 0x7f0c00da
-			public const int menu_settings = 2131493082;
+			// aapt resource value: 0x7f0c00db
+			public const int menu_settings = 2131493083;
 			
 			// aapt resource value: 0x7f0c00d8
 			public const int menu_sqldata = 2131493080;
 			
-			// aapt resource value: 0x7f0c00d9
-			public const int menu_sqldatadelete = 2131493081;
+			// aapt resource value: 0x7f0c00da
+			public const int menu_sqldatadelete = 2131493082;
 			
 			// aapt resource value: 0x7f0c00d6
 			public const int menu_upload = 2131493078;

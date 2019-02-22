@@ -6,6 +6,7 @@
   <!--///android:showAsAction="ifRoom" ///-->
   <item android:id="@+id/menu_location" android:title="Get Location" android:showAsAction="ifRoom" />
   <item android:id="@+id/menu_sqldata" android:title="Show Scan Data" showAsAction="ifRoom" />
+  <item android:id="@+id/menu_exportdata" android:title="Export Scan Data" showAsAction="ifRoom" />
   <item android:id="@+id/menu_sqldatadelete" android:title="Delete Scan Data" showAsAction="ifRoom" />
 
   <!--///showAsAction="always" ///-->

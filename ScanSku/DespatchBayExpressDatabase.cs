@@ -43,6 +43,10 @@ namespace DespatchBayExpress
                 return string.Format("[Scan: ID={0}, Tracking Number={1}, Scan Time={2}, Longtitude={3}, Latitude={4}, Batch={5}, Sent={6}], isCollected={7}", ID, TrackingNumber, ScanTime, Longitude, Latitude, Batch, Sent, IsCollected);
             }
 
+            public string ToCSV()
+            {
+                return string.Format("{0},{1},{2},{3},{4},{5},{6},{7}", ID, TrackingNumber, ScanTime, Longitude, Latitude, Batch, Sent, IsCollected);
+            }
         }
 
         /// <summary>
