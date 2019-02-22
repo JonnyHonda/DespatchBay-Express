@@ -278,6 +278,9 @@ namespace DespatchBayExpress
                 case Resource.Id.menu_sqldata:
                     StartActivity(typeof(SqliteActivity));
                     break;
+                case Resource.Id.menu_exportdata:
+                    ExportScanData();
+                    break;
                 case Resource.Id.menu_exit:
                     // This should exit the app
                     this.FinishAffinity();
@@ -356,6 +359,33 @@ namespace DespatchBayExpress
             return base.OnOptionsItemSelected(item);
         }
 
+        private void ExportScanData()
+        {
+            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.WriteExternalStorage) != (int)Permission.Granted)
+            {
+                ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.WriteExternalStorage }, 0);
+            }
+
+            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.ReadExternalStorage) != (int)Permission.Granted)
+            {
+                ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.ReadExternalStorage }, 0);
+            }
+            var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans");
+            
+            string fileName = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
+            // Set a variable to the Documents path.
+            string docPath = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, Android.OS.Environment.DirectoryDownloads);
+            string filepath = (Path.Combine(docPath, fileName));
+            using (StreamWriter outputFile = new StreamWriter(filepath))
+            {
+                foreach (ParcelScans parcelScan in parcelScans)
+                    outputFile.WriteLine(parcelScan.ToCSV());
+            }
+
+        // Notify the user about the completed "download"
+        var downloadManager = DownloadManager.FromContext(Android.App.Application.Context);
+            downloadManager.AddCompletedDownload(fileName, "DespatchBay Express Export", true, "application/txt", filepath, File.ReadAllBytes(filepath).Length, true);
+        }
 
         private bool SubmitCollectionData(Dictionary<string, string> parameters)
         {
