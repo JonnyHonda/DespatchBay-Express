@@ -103,7 +103,7 @@ namespace DespatchBayExpress
                                 Log.Info("TAG-SETTINGS", "Settings - Call FetchTrackingRegExData");
                                 System.Threading.Tasks.Task taskA = System.Threading.Tasks.Task.Factory.StartNew(() => FetchTrackingRegExData(loadConfigUrl.Text));
                                 taskA.Wait();
-                                Toast.MakeText(this, "Config QR code read succesfull", ToastLength.Long).Show();
+                                Toast.MakeText(this, "Config QR code read successful", ToastLength.Long).Show();
 
                             }
                         }
