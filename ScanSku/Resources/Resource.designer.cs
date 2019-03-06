@@ -1908,9 +1908,6 @@ namespace DespatchBayExpress
 			// aapt resource value: 0x7f080054
 			public const int disabled_alpha_material_light = 2131230804;
 			
-			// aapt resource value: 0x7f08009e
-			public const int fab_margin = 2131230878;
-			
 			// aapt resource value: 0x7f080000
 			public const int fastscroll_default_thickness = 2131230720;
 			
@@ -3311,6 +3308,9 @@ namespace DespatchBayExpress
 			
 			// aapt resource value: 0x7f030002
 			public const int ic_launcher_round = 2130903042;
+			
+			// aapt resource value: 0x7f030003
+			public const int ic_warning_black_24dp = 2130903043;
 			
 			static Mipmap()
 			{
