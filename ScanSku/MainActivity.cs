@@ -68,6 +68,9 @@ namespace DespatchBayExpress
                 StartActivity(typeof(SettingsActivity));
             }
             base.OnCreate(savedInstanceState);
+            SetContentView(Resource.Layout.activity_main);
+            Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
+            SetSupportActionBar(toolbar);
             // We only want to create a batch number here once when the app first starts and not everytime the activity loads
             if (batch == Guid.Empty)
             {
@@ -80,8 +83,7 @@ namespace DespatchBayExpress
             databaseConnection = new SQLiteConnection(databasePath);
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
             {
-                SetContentView(Resource.Layout.activity_main);
-
+                
                 // Create the ParcelScans table
                 databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
 
@@ -93,8 +95,7 @@ namespace DespatchBayExpress
                 InitializeLocationManager();
 
                 coordinates = FindViewById<TextView>(Resource.Id.footer_text);
-                Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
-                SetSupportActionBar(toolbar);
+                
 
                 TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
@@ -382,31 +383,40 @@ namespace DespatchBayExpress
 
         private void ExportScanData()
         {
-            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.WriteExternalStorage) != (int)Permission.Granted)
-            {
-                ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.WriteExternalStorage }, 0);
-            }
 
-            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.ReadExternalStorage) != (int)Permission.Granted)
-            {
-                ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.ReadExternalStorage }, 0);
-            }
-            var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans");
-            
-            string fileName = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
-            // Set a variable to the Documents path.
-            string docPath = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, Android.OS.Environment.DirectoryDownloads);
-            string filepath = (Path.Combine(docPath, fileName));
-            using (StreamWriter outputFile = new StreamWriter(filepath))
-            {
-                foreach (ParcelScans parcelScan in parcelScans)
-                    outputFile.WriteLine(parcelScan.ToCSV());
-            }
+            try {
+                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans");
 
-        // Notify the user about the completed "download"
-        var downloadManager = DownloadManager.FromContext(Android.App.Application.Context);
-            downloadManager.AddCompletedDownload(fileName, "DespatchBay Express Export", true, "application/txt", filepath, File.ReadAllBytes(filepath).Length, true);
-        }
+                string fileName = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
+                // Set a variable to the Documents path.
+                string docPath = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, Android.OS.Environment.DirectoryDownloads);
+                string filepath = (Path.Combine(docPath, fileName));
+                using (StreamWriter outputFile = new StreamWriter(filepath))
+                {
+                    foreach (ParcelScans parcelScan in parcelScans)
+                        outputFile.WriteLine(parcelScan.ToCSV());
+                }
+
+                // Notify the user about the completed "download"
+                var downloadManager = DownloadManager.FromContext(Android.App.Application.Context);
+                downloadManager.AddCompletedDownload(fileName, "DespatchBay Express Export", true, "application/txt", filepath, File.ReadAllBytes(filepath).Length, true);
+            }
+            catch
+            {
+                var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
+                Snackbar.Make(rootView,
+                                   "You must have access to external storage",
+                                   Snackbar.LengthIndefinite)
+                            .SetAction("OK",
+                                       new Action<View>(delegate (View obj)
+                                       {
+                                           ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 2);
+                                       }
+                            )
+                    ).Show();
+               
+            }
+            }
 
         private bool SubmitCollectionData(Dictionary<string, string> parameters)
         {
@@ -546,23 +556,11 @@ namespace DespatchBayExpress
         {
             if (requestCode == REQUEST_LOCATION)
             {
-                // Received permission jsonResult for GPS permission.
-                Log.Info("GPS", "Received response for Location permission request.");
-                var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
-                // Check if the only required permission has been granted
-                if ((grantResults.Length == 1) && (grantResults[0] == Permission.Granted))
-                {
-                    // Location permission has been granted, okay to retrieve the location of the device.
-                    Log.Info("GPS", "Location permission has now been granted.");
-                    // Snackbar.Make(rootView, Resource.String.permission_available_location, Snackbar.LengthShort).Show();
-                    this.FinishAffinity();
-                    ;
-                }
-                else
-                {
-                    Log.Info("GPS", "Location permission was NOT granted.");
-                    //  Snackbar.Make(rootView, Resource.String.permissions_not_granted, Snackbar.LengthShort).Show();
-                }
+
+            }
+            else if (requestCode == 2 || requestCode == 3)
+            {
+                ExportScanData();
             }
             else
             {
