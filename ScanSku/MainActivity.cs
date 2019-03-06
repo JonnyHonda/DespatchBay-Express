@@ -81,12 +81,10 @@ namespace DespatchBayExpress
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal),
                 "localscandata.db3");
             databaseConnection = new SQLiteConnection(databasePath);
+            // Create the ParcelScans table
+            databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == (int)Permission.Granted)
             {
-                
-                // Create the ParcelScans table
-                databaseConnection.CreateTable<DespatchBayExpressDataBase.ParcelScans>();
-
                 mediaPlayer = MediaPlayer.Create(this, Resource.Raw.beep_07);
                 TrackingNumberDataProvider();
 
@@ -95,7 +93,7 @@ namespace DespatchBayExpress
                 InitializeLocationManager();
 
                 coordinates = FindViewById<TextView>(Resource.Id.footer_text);
-                
+
 
                 TrackingScan = FindViewById<EditText>(Resource.Id.txtentry);
 
@@ -193,16 +191,7 @@ namespace DespatchBayExpress
 
 
                     var requiredPermissions = new String[] { Manifest.Permission.AccessFineLocation };
-                    Snackbar.Make(rootView,
-                                   Resource.String.permission_location_rationale,
-                                   Snackbar.LengthIndefinite)
-                            .SetAction("OK",
-                                       new Action<View>(delegate (View obj)
-                                       {
-                                           ActivityCompat.RequestPermissions(this, requiredPermissions, REQUEST_LOCATION);
-                                       }
-                            )
-                    ).Show();
+                    ActivityCompat.RequestPermissions(this, requiredPermissions, REQUEST_LOCATION);
                 }
                 else
                 {
@@ -303,7 +292,7 @@ namespace DespatchBayExpress
                         { "userAgent", "Man-In-VAN Handheld Device" },
                         { "token", applicationKey },
                         { "retentionPeriod", retentionPeriod },
-                        
+
                     };
                     try
                     {
@@ -336,24 +325,26 @@ namespace DespatchBayExpress
                     {
                         Log.Info("SubmitCollectionData", ex.Message);
                     }
-                    
+
                     if (status == false)
                     {
                         Toast.MakeText(this, "There was a problem with the upload", ToastLength.Long).Show();
                         // Instantiate the builder and set notification elements:
                         Notification.Builder builder = null;
-                        try {
+                        try
+                        {
                             builder = new Notification.Builder(this, "NOTI_CH_ID");
                         }
-                        catch {
+                        catch
+                        {
                             builder = new Notification.Builder(this);
                         }
 
                         builder.SetContentTitle("Failed Uploads");
                         builder.SetContentText("There are uploads that may have failed.");
-                           builder.SetSmallIcon(Resource.Mipmap.ic_warning_black_24dp);
+                        builder.SetSmallIcon(Resource.Mipmap.ic_warning_black_24dp);
 
-                        
+
                         // Build the notification:
                         Notification notification = builder.Build();
 
@@ -362,12 +353,13 @@ namespace DespatchBayExpress
                         const int notificationId = 0;
                         notificationManager.Notify(notificationId, notification);
                     }
-                    else {
+                    else
+                    {
                         Toast.MakeText(this, "Upload complete", ToastLength.Long).Show();
                     }
 
                     TrackingNumberDataProvider();
-                   
+
                     // Create a new Batch number;
                     SetBatchNumber(true);
                     break;
@@ -383,8 +375,11 @@ namespace DespatchBayExpress
 
         private void ExportScanData()
         {
+            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.WriteExternalStorage) == (int)Permission.Granted ||
+                ContextCompat.CheckSelfPermission(this, Manifest.Permission.ReadExternalStorage) == (int)Permission.Granted)
+            {
 
-            try {
+
                 var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans");
 
                 string fileName = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
@@ -401,22 +396,11 @@ namespace DespatchBayExpress
                 var downloadManager = DownloadManager.FromContext(Android.App.Application.Context);
                 downloadManager.AddCompletedDownload(fileName, "DespatchBay Express Export", true, "application/txt", filepath, File.ReadAllBytes(filepath).Length, true);
             }
-            catch
-            {
-                var rootView = FindViewById<CoordinatorLayout>(Resource.Id.root_view);
-                Snackbar.Make(rootView,
-                                   "You must have access to external storage",
-                                   Snackbar.LengthIndefinite)
-                            .SetAction("OK",
-                                       new Action<View>(delegate (View obj)
-                                       {
-                                           ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 2);
-                                       }
-                            )
-                    ).Show();
-               
-            }
-            }
+            else
+
+                ActivityCompat.RequestPermissions(this, new string[] { Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 2);
+
+        }
 
         private bool SubmitCollectionData(Dictionary<string, string> parameters)
         {
@@ -458,10 +442,10 @@ namespace DespatchBayExpress
 
                 // regardless of whether we get a successful upload we still must flag the items as being collected, 
                 // the assumtion being that they will have been taken away even if the dirver did not upload the collection 
-                var  parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set IsCollected = 1  WHERE Sent IS null and batch=?", collection.batchnumber);
-                
+                var parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("UPDATE ParcelScans set IsCollected = 1  WHERE Sent IS null and batch=?", collection.batchnumber);
+
                 // Need to select all the scans that have not been uploaded and match the current batch
-                 parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
+                parcelScans = databaseConnection.Query<DespatchBayExpressDataBase.ParcelScans>("SELECT * FROM ParcelScans WHERE Sent IS null and batch=?", collection.batchnumber);
 
                 List<Scan> scannedParcelList = new List<Scan>();
 
@@ -514,7 +498,7 @@ namespace DespatchBayExpress
                         RemoteServiceResult result = new RemoteServiceResult();
                         result = JsonConvert.DeserializeObject<RemoteServiceResult>(jsonResult);
                         Log.Info("TAG-ASYNCTASK", jsonResult);
-                        
+
                         if (httpResponse.StatusCode == HttpStatusCode.OK)
                         {
                             Log.Info("TAG-ASYNCTASK", "Success, update parcels");
