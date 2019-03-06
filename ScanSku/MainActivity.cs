@@ -339,6 +339,27 @@ namespace DespatchBayExpress
                     if (status == false)
                     {
                         Toast.MakeText(this, "There was a problem with the upload", ToastLength.Long).Show();
+                        // Instantiate the builder and set notification elements:
+                        Notification.Builder builder = null;
+                        try {
+                            builder = new Notification.Builder(this, "NOTI_CH_ID");
+                        }
+                        catch {
+                            builder = new Notification.Builder(this);
+                        }
+
+                        builder.SetContentTitle("Failed Uploads");
+                        builder.SetContentText("There are uploads that may have failed.");
+                           builder.SetSmallIcon(Resource.Mipmap.ic_warning_black_24dp);
+
+                        
+                        // Build the notification:
+                        Notification notification = builder.Build();
+
+                        // Get the notification manager:
+                        NotificationManager notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
+                        const int notificationId = 0;
+                        notificationManager.Notify(notificationId, notification);
                     }
                     else {
                         Toast.MakeText(this, "Upload complete", ToastLength.Long).Show();
