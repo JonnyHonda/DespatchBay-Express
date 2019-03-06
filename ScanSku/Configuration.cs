@@ -19,7 +19,7 @@ namespace DespatchBayExpress
         public Uri RegexEndPoint { get; set; }
 
         [JsonProperty("ApplicationKey")]
-        public Guid ApplicationKey { get; set; }
+        public string ApplicationKey { get; set; }
 
         [JsonProperty("RetentionPeriod")]
         public long RetentionPeriod { get; set; }

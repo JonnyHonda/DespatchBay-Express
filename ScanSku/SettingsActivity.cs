@@ -73,7 +73,7 @@ namespace DespatchBayExpress
                     {
 
                         string jsonstring = TrackingScan.Text;
-                        jsonstring = Regex.Replace(jsonstring, @"\s+", "");
+                        //jsonstring = Regex.Replace(jsonstring, @"\s+", "");
                         Configuration configuration = new Configuration();
                         try
                         {
